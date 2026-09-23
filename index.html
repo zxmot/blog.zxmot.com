@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>zxmot</title>
+<meta name="description" content="zxmot — 把纠缠的东西切开。工具、方法论与实验。">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+
+  :root{
+    --bg:#fcfcfb; --surface:#fff; --border:#e8e6e2; --border-hover:#cfcbc4;
+    --text:#171614; --muted:#6f6d67; --faint:#a3a099;
+    --accent:#b45309; --radius:16px; --max:1000px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0f0f0e; --surface:#171715; --border:#282825; --border-hover:#3d3d38;
+      --text:#f0efec; --muted:#a3a099; --faint:#6f6d67; --accent:#f59e0b;
+    }
+  }
+
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+
+  /* ---------- header ---------- */
+  header{padding:104px 0 72px}
+  .brand{
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    font-size:13px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--faint);margin-bottom:32px;
+  }
+  h1{
+    font-size:clamp(28px,5.2vw,46px);line-height:1.22;
+    font-weight:600;letter-spacing:-.022em;max-width:16em;
+  }
+  h1 em{font-style:normal;color:var(--faint)}
+  .lede{margin-top:22px;font-size:16px;color:var(--muted);max-width:32em}
+
+  /* ---------- sections ---------- */
+  main{padding-bottom:96px}
+  section{margin-bottom:64px}
+  .sec-head{margin-bottom:22px;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .sec-label{
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);
+  }
+  .sec-title{font-size:18px;font-weight:600;letter-spacing:-.01em}
+  .sec-desc{font-size:14px;color:var(--faint);margin-left:auto}
+
+  /* ---------- grid & card ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:14px}
+  .card{
+    display:flex;flex-direction:column;gap:12px;
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius);padding:22px;
+    transition:border-color .16s ease,transform .16s ease;
+  }
+  .card:hover{border-color:var(--border-hover);transform:translateY(-2px)}
+  .card-top{display:flex;align-items:center;gap:8px}
+  .card-name{
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    font-size:15px;font-weight:600;letter-spacing:-.01em;
+  }
+  .card-arrow{margin-left:auto;color:var(--faint);font-size:14px;transition:color .16s ease}
+  .card:hover .card-arrow{color:var(--accent)}
+  .card-desc{font-size:14px;color:var(--muted);flex:1}
+  .card-tags{display:flex;flex-wrap:wrap;gap:6px}
+  .tag{
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    font-size:11px;color:var(--faint);
+    border:1px solid var(--border);border-radius:6px;padding:2px 7px;
+  }
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--border);padding:28px 0 48px}
+  .foot{
+    display:flex;gap:16px;flex-wrap:wrap;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    font-size:12px;color:var(--faint);
+  }
+  .foot a:hover{color:var(--text)}
+
+  @media (max-width:560px){
+    header{padding:72px 0 56px}
+    .wrap{padding:0 20px}
+    .sec-desc{margin-left:0;flex-basis:100%}
+  }
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <div class="brand" id="brand"></div>
+  <h1 id="tagline"></h1>
+  <p class="lede" id="lede"></p>
+</header>
+
+<main class="wrap" id="main"></main>
+
+<footer>
+  <div class="wrap foot" id="foot"></div>
+</footer>
+
+<script>
+/* ============================================================
+   1. 站点信息 —— 改这里
+   ============================================================ */
+const SITE = {
+  brand:   "zxmot",
+  tagline: "把纠缠的东西<em>切开</em>。",
+  lede:    "一个关于解耦的工具与方法论集合。让内容、布局、逻辑与宿主各自独立演化。",
+  links: [
+    // { label: "GitHub", url: "https://github.com/..." },
+    // { label: "Email",  url: "mailto:hi@zxmot.com" },
+  ],
+};
+
+/* ============================================================
+   2. 内容目录 —— 以后加东西，只动这个数组
+      新增一个分类：复制一个 { ... } 块
+      新增一个条目：往 items 里追加一个对象
+      空 items 的分类会自动隐藏
+   ============================================================ */
+const SECTIONS = [
+  {
+    id: "tools",
+    label: "Tools",
+    title: "工具",
+    desc: "可以直接拿去用的东西",
+    items: [
+      {
+        name: "brk",
+        desc: "一个 < 10kb 的微前端骨架。不引入虚拟 DOM，不做 diff，组件只渲染一次，更新由你掌控。",
+        url: "https://brk.zxmot.com",
+        tags: ["JSX", "零依赖", "< 10kb", "ESM"],
+      },
+      {
+        name: "SSB",
+        desc: "静态网站构建器。让 AI 自由创作内容，让模板统一站点风格——基于原生 Shadow DOM，零运行时。",
+        url: "https://ssb.zxmot.com",
+        tags: ["Shadow DOM", "零运行时", "模板化"],
+      },
+    ],
+  },
+  {
+    id: "notes",
+    label: "Notes",
+    title: "思考",
+    desc: "还在成形中的方法论，写下来是为了看清它",
+    items: [
+      {
+        name: "把正在开发的功能，从宿主里抽出来",
+        desc: "一种让「改逻辑」和「重启程序」彻底解耦的开发方式。验证成本从构建整个客户端，降到编译一条命令。",
+        url: "https://blog.zxmot.com/proposals/debug-test-invokes.html",
+        tags: ["方法论", "调试"],
+      },
+    ],
+  },
+
+  /* ---- 未来扩展示例（取消注释即可） ----
+  {
+    id: "labs",
+    label: "Labs",
+    title: "实验",
+    desc: "还不确定会不会成，但值得先做出来",
+    items: [
+      { name: "…", desc: "…", url: "…", tags: ["…"] },
+    ],
+  },
+  */
+];
+
+/* ============================================================
+   3. 渲染 —— 通常不需要改
+   ============================================================ */
+const esc = s => String(s).replace(/[&<>"']/g, c =>
+  ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
+document.getElementById("brand").textContent = SITE.brand;
+document.getElementById("tagline").innerHTML = SITE.tagline;
+document.getElementById("lede").textContent = SITE.lede;
+
+document.getElementById("main").innerHTML = SECTIONS
+  .filter(sec => sec.items && sec.items.length)
+  .map(sec => `
+    <section>
+      <div class="sec-head">
+        <span class="sec-label">${esc(sec.label)}</span>
+        <span class="sec-title">${esc(sec.title)}</span>
+        ${sec.desc ? `<span class="sec-desc">${esc(sec.desc)}</span>` : ""}
+      </div>
+      <div class="grid">
+        ${sec.items.map(it => `
+          <a class="card" href="${esc(it.url)}" target="_blank" rel="noopener">
+            <div class="card-top">
+              <span class="card-name">${esc(it.name)}</span>
+              <span class="card-arrow">↗</span>
+            </div>
+            <p class="card-desc">${esc(it.desc)}</p>
+            <div class="card-tags">
+              ${(it.tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join("")}
+            </div>
+          </a>
+        `).join("")}
+      </div>
+    </section>
+  `).join("");
+
+const year = new Date().getFullYear();
+document.getElementById("foot").innerHTML =
+  `<span>© ${year} ${esc(SITE.brand)}</span>` +
+  SITE.links.map(l => `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join("");
+</script>
+</body>
+</html>
