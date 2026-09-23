@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>从宿主中抽离 · 一种免重启的功能调试思路</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --line: #2a2f3a;
+    --line-soft: #22262f;
+    --text: #e6e9ef;
+    --dim: #9aa3b2;
+    --faint: #6b7280;
+    --accent: #6ea8fe;
+    --accent-2: #7ee0b8;
+    --warn: #ffb86b;
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: radial-gradient(1200px 700px at 50% -12%, #1c2333 0%, var(--bg) 62%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    line-height: 1.8;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 780px; margin: 0 auto; padding: 88px 24px 140px; }
+
+  /* ---------- Hero ---------- */
+  header { margin-bottom: 84px; }
+  .tag {
+    display: inline-block;
+    font-size: 11.5px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid rgba(110,168,254,.32);
+    background: rgba(110,168,254,.08);
+    padding: 5px 14px; border-radius: 999px;
+    margin-bottom: 26px;
+  }
+  h1 {
+    font-size: clamp(32px, 5.6vw, 50px);
+    line-height: 1.2; margin: 0 0 22px;
+    letter-spacing: -.028em; font-weight: 700;
+  }
+  h1 .grad {
+    background: linear-gradient(100deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .lede {
+    font-size: 18px; color: var(--dim);
+    max-width: 56ch; margin: 0;
+    line-height: 1.8;
+  }
+
+  /* ---------- Section ---------- */
+  section { margin-top: 76px; }
+  h2 {
+    font-size: 12.5px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--faint); font-weight: 600;
+    margin: 0 0 26px; display: flex; align-items: center; gap: 14px;
+  }
+  h2::after {
+    content: ""; flex: 1; height: 1px;
+    background: linear-gradient(90deg, var(--line), transparent);
+  }
+  h3 { font-size: 18px; margin: 0 0 10px; letter-spacing: -.012em; font-weight: 600; }
+  p { margin: 0 0 17px; }
+  p:last-child { margin-bottom: 0; }
+
+  .muted { color: var(--dim); }
+  .faint { color: var(--faint); }
+  .small { font-size: 14.5px; }
+  strong { color: #fff; font-weight: 600; }
+  .hl { color: var(--accent-2); font-weight: 600; }
+  .hl-a { color: var(--accent); font-weight: 600; }
+
+  .card {
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 30px 32px;
+  }
+  .card + .card { margin-top: 16px; }
+
+  .grid { display: grid; gap: 16px; }
+  @media (min-width: 700px) { .grid.two { grid-template-columns: 1fr 1fr; } }
+
+  /* ---------- 引言块 ---------- */
+  .quote {
+    border-left: 3px solid var(--accent);
+    padding: 6px 0 6px 26px;
+    margin: 34px 0;
+    font-size: 19px;
+    line-height: 1.75;
+    color: #dfe4ee;
+    letter-spacing: -.012em;
+  }
+  .quote .em {
+    background: linear-gradient(100deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    font-weight: 600;
+  }
+
+  /* ---------- 对照 ---------- */
+  .versus {
+    display: grid; gap: 1px;
+    background: var(--line-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  @media (min-width: 700px) { .versus { grid-template-columns: 1fr 1fr; } }
+  .versus > div { background: var(--panel); padding: 28px 30px; }
+  .versus .head {
+    font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--faint); margin-bottom: 18px; font-weight: 600;
+  }
+  .versus ul { margin: 0; padding-left: 20px; }
+  .versus li { margin-bottom: 11px; color: #cfd6e3; font-size: 15px; }
+  .versus li:last-child { margin-bottom: 0; }
+  .versus .head.a { color: var(--warn); }
+  .versus .head.b { color: var(--accent-2); }
+
+  /* ---------- 洞察块 ---------- */
+  .insight {
+    background: linear-gradient(135deg, rgba(110,168,254,.08), rgba(126,224,184,.06));
+    border: 1px solid rgba(110,168,254,.22);
+    border-radius: var(--radius);
+    padding: 34px 36px;
+    margin-top: 16px;
+  }
+  .insight .label {
+    font-size: 11.5px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600; margin-bottom: 16px;
+  }
+  .insight p { font-size: 17px; color: #dfe4ee; line-height: 1.8; }
+
+  /* ---------- 场景 ---------- */
+  .scene {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 30px 32px;
+  }
+  .scene .st {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+  }
+  .scene .ic {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: grid; place-items: center; font-size: 18px;
+    background: rgba(110,168,254,.1); border: 1px solid rgba(110,168,254,.2);
+  }
+  .scene .st h3 { margin: 0; }
+  .scene .sd { color: var(--dim); font-size: 15px; }
+  .scene .sd + .sd { margin-top: 12px; }
+
+  /* ---------- 流程 ---------- */
+  .flow { counter-reset: step; }
+  .step {
+    position: relative;
+    padding: 0 0 32px 58px;
+    counter-increment: step;
+  }
+  .step:last-child { padding-bottom: 0; }
+  .step::before {
+    content: counter(step);
+    position: absolute; left: 0; top: 3px;
+    width: 36px; height: 36px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 14px; font-weight: 700;
+    color: var(--bg);
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  }
+  .step::after {
+    content: ""; position: absolute; left: 17.5px; top: 45px; bottom: 6px;
+    width: 1px; background: var(--line);
+  }
+  .step:last-child::after { display: none; }
+  .step .t { font-weight: 600; color: #fff; margin-bottom: 5px; font-size: 16px; }
+  .step .d { color: var(--dim); font-size: 15px; }
+
+  /* ---------- 收益 ---------- */
+  .benefits { display: grid; gap: 16px; }
+  @media (min-width: 700px) { .benefits { grid-template-columns: 1fr 1fr; } }
+  .benefit {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px 26px;
+  }
+  .benefit .ic { font-size: 20px; margin-bottom: 12px; display: block; }
+  .benefit .bt { font-weight: 600; margin-bottom: 7px; color: #fff; font-size: 15.5px; }
+  .benefit .bd { font-size: 14px; color: var(--dim); line-height: 1.7; }
+
+  /* ---------- 边界 ---------- */
+  .boundary {
+    display: flex; gap: 16px; align-items: flex-start;
+    padding: 20px 24px;
+    background: rgba(255,184,107,.05);
+    border: 1px solid rgba(255,184,107,.18);
+    border-radius: 12px;
+  }
+  .boundary + .boundary { margin-top: 12px; }
+  .boundary .bdot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--warn); margin-top: 9px; flex: none;
+  }
+  .boundary .btxt { font-size: 14.5px; color: #d8dde6; }
+  .boundary .btxt strong { color: var(--warn); }
+
+  footer {
+    margin-top: 96px; padding-top: 30px;
+    border-top: 1px solid var(--line);
+    color: var(--faint); font-size: 13.5px;
+    display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ Hero ============ -->
+  <header>
+    <span class="tag">Open Proposal · Dev Workflow</span>
+    <h1>把正在开发的功能，<br><span class="grad">从宿主里抽出来</span></h1>
+    <p class="lede">
+      一种让「改逻辑」和「重启程序」彻底解耦的开发方式。
+      让尚不稳定的功能脱离宿主，独立构建、独立执行、随时替换——
+      而整个客户端或服务的现场，全程不动。
+    </p>
+  </header>
+
+  <!-- ============ 问题 ============ -->
+  <section>
+    <h2>问题</h2>
+    <p class="muted">
+      在今天的客户端与后端架构里，功能逻辑的变更是高频的，而验证一次变更的代价往往高得不成比例。
+      你改了一行判断、调了一个参数，接下来要面对的却是：重新构建整个客户端、或者重启整个服务进程、
+      等它重新加载、重新登录、重新把界面点到刚才那个状态——然后才有机会看到那一行改动是否生效。
+    </p>
+    <p class="muted">
+      真正变化的，往往只是<span class="hl">少数几个还在开发中的功能</span>。
+      其余成百上千行代码是稳定的、不需要跟着动的。
+      让整条构建与启动链路为这几个功能陪跑，是一种沉默而持续的浪费。
+      更糟的是它对心流的破坏：每次想验证一个小改动，都要先付出一次「重启税」。
+    </p>
+  </section>
+
+  <!-- ============ 核心思想 ============ -->
+  <section>
+    <h2>核心思想</h2>
+    <div class="versus">
+      <div>
+        <div class="head a">默认路径</div>
+        <ul>
+          <li>改动落在宿主程序内部</li>
+          <li>验证一次 = 重新构建 / 重启一次</li>
+          <li>迭代周期被构建时间绑架</li>
+          <li>调试入口与正式入口纠缠不清</li>
+        </ul>
+      </div>
+      <div>
+        <div class="head b">抽离路径</div>
+        <ul>
+          <li>开发中的功能挂载到一条独立命令上</li>
+          <li>验证一次 = 重新编译这一条命令</li>
+          <li>宿主进程始终不动，随时可被调用</li>
+          <li>调试路径与正式路径并行、互不干扰</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="quote">
+      与其让整个程序重启来加载新逻辑，<br>
+      不如把新逻辑切出去，让它<span class="em">自己去构建、自己去运行</span>。
+    </div>
+
+    <p class="muted">
+      具体做法是：在本地维护一条命令，内部持有一张功能注册表。
+      把正在开发的功能挂载上去，各赋予一个标识；调用时按约定传入标识、子命令和参数，
+      就能触发其中任意一个功能的最新版本。
+      前端则通过一个薄代理接入——它接收请求、转交命令执行、再把结果原样回吐。
+      改动逻辑后，只需重新编译这一条命令，几秒钟完成，下一次调用就是新版。
+    </p>
+  </section>
+
+  <!-- ============ 关键洞察 ============ -->
+  <section>
+    <h2>关键洞察</h2>
+    <div class="insight">
+      <div class="label">本质</div>
+      <p>
+        把局部逻辑抽出来单独构建、单独执行——
+        <strong>本质上就是组件级测试</strong>。
+      </p>
+      <p>
+        唯一的区别在于：它套上了最终的 UI 界面去触发调用。
+        不是写一个脱离真实的单元测试，也不是用 mock 假装环境，
+        而是让真实的前端、真实的参数、真实的交互，直接打到那块还在打磨的逻辑上。
+      </p>
+    </div>
+    <p class="muted" style="margin-top:24px;">
+      这个视角一旦成立，很多事就顺了：抽离不是「为了调试而搭的临时脚手架」，
+      它是组件级测试的一种自然形态——只不过组件跑在真实调用链里，
+      由真实的界面驱动，验证的是真实的行为，而不是模拟出来的行为。
+      调试与测试在这里不再是两件事。
+    </p>
+  </section>
+
+  <!-- ============ 场景 ============ -->
+  <section>
+    <h2>适用场景</h2>
+    <div class="grid two">
+      <div class="scene">
+        <div class="st">
+          <span class="ic">🖥️</span>
+          <h3>Web 技术构建的客户端</h3>
+        </div>
+        <p class="sd">
+          界面逻辑本身就是可插拔、可热加载的。
+          在这种架构里，把底层的功能逻辑抽成独立命令尤其自然——
+          界面层不必重建，底层功能可以独立迭代。
+        </p>
+        <p class="sd">
+          客户端窗口、会话状态、用户操作现场全程保留，
+          开发者能在真实的使用场景里反复验证一块正在开发的功能。
+        </p>
+      </div>
+      <div class="scene">
+        <div class="st">
+          <span class="ic">🌐</span>
+          <h3>前后端分离的服务</h3>
+        </div>
+        <p class="sd">
+          前端天然与后端分离，本就通过不同的接口来调用后端能力。
+          在这种结构下，把开发中的接口逻辑抽成独立命令，前端几乎无感。
+        </p>
+        <p class="sd">
+          真实接口与调试接口并行存在，调用点写法一致，
+          切换只在一处开关——业务代码不必为调试而分叉。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 工作流 ============ -->
+  <section>
+    <h2>工作流</h2>
+    <div class="flow">
+      <div class="step">
+        <div class="t">把功能挂载到命令上</div>
+        <div class="d">将要调试的功能逻辑写进命令源码，注册到功能表里，赋予一个标识。</div>
+      </div>
+      <div class="step">
+        <div class="t">按约定调用</div>
+        <div class="d">传入三个要素：触发哪个功能、执行什么子命令、以及一段结构化参数。</div>
+      </div>
+      <div class="step">
+        <div class="t">重新编译这一条命令</div>
+        <div class="d">逻辑改完，只需重新编译这一个命令，几秒完成，宿主进程完全不受影响。</div>
+      </div>
+      <div class="step">
+        <div class="t">立即验证</div>
+        <div class="d">下一次调用自动拿到新版本，无需重启任何长驻进程，迭代闭环极短。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 收益 ============ -->
+  <section>
+    <h2>它带来什么</h2>
+    <div class="benefits">
+      <div class="benefit">
+        <span class="ic">⚡</span>
+        <div class="bt">迭代周期骤减</div>
+        <div class="bd">验证成本从「构建整个客户端」降到「编译一条命令」，几乎可以忽略。</div>
+      </div>
+      <div class="benefit">
+        <span class="ic">🧩</span>
+        <div class="bt">关注点分离</div>
+        <div class="bd">不稳定的逻辑被隔离在独立容器里，不会污染宿主程序的稳定部分。</div>
+      </div>
+      <div class="benefit">
+        <span class="ic">🔁</span>
+        <div class="bt">宿主零打扰</div>
+        <div class="bd">长驻进程、窗口、会话状态全程不动，调试不打断任何现场。</div>
+      </div>
+      <div class="benefit">
+        <span class="ic">🧪</span>
+        <div class="bt">真实 UI 驱动的组件测试</div>
+        <div class="bd">不是 mock，也不是脱离环境的单测——真实界面、真实参数、真实行为。</div>
+      </div>
+      <div class="benefit">
+        <span class="ic">🎛️</span>
+        <div class="bt">按需触发</div>
+        <div class="bd">一张功能表 + 统一参数约定，想调哪个功能就调哪个，边界清晰。</div>
+      </div>
+      <div class="benefit">
+        <span class="ic">🪶</span>
+        <div class="bt">前端无感切换</div>
+        <div class="bd">真假两条调用路径响应形状对齐，业务代码不必为调试单独写一套。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 边界 ============ -->
+  <section>
+    <h2>它不是万能的</h2>
+    <div class="boundary">
+      <span class="bdot"></span>
+      <div class="btxt">
+        <strong>不替代正式链路的最终验证。</strong>
+        调试路径跑通，不等于上线就绪。抽离出来的功能是独立副本，
+        与正式实现之间存在分叉的可能，需要明确「调试通过后如何回填」的约定。
+      </div>
+    </div>
+    <div class="boundary">
+      <span class="bdot"></span>
+      <div class="btxt">
+        <strong>本质是一个「任意功能调用入口」。</strong>
+        它只应存在于本地开发环境，绝不应面向生产开放。
+        调试代理必须在非开发环境下直接拒绝服务。
+      </div>
+    </div>
+    <div class="boundary">
+      <span class="bdot"></span>
+      <div class="btxt">
+        <strong>与热重载不是同一件事。</strong>
+        热重载解决的是「改代码后进程内自动重载」；
+        这套思路解决的是「把不稳定功能从宿主中切出去」。
+        两者可以并存，但边界要清楚，否则行为容易不一致。
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 设计哲学 ============ -->
+  <section>
+    <h2>一句话</h2>
+    <div class="card">
+      <p style="font-size:17px; color:#dfe4ee; margin-bottom:16px;">
+        把编译期问题转化为运行期调用。
+      </p>
+      <p class="muted" style="margin-bottom:0;">
+        传统上，「逻辑变更」和「程序启动」是绑定的：改了逻辑就得重新启动。
+        而这套思路把两者解耦——逻辑放在一个可以随时重新生成的独立单元里，
+        程序在运行期通过一次调用来获取它的最新形态。
+        它不宏大，也不复杂，但它把开发者从反复重启的循环里解放了出来。
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <span>一个关于开发流程的开放提案</span>
+    <span>欢迎讨论 · 欢迎实践</span>
+  </footer>
+
+</div>
+</body>
+</html>
