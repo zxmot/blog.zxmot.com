@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>zxmot</title>
-<meta name="description" content="zxmot — 把纠缠的东西切开。工具、方法论与实验。">
+<title>ZxMOT Blog</title>
+<meta name="description" content="zxmot — 对未知的持续驱动。工具、提案与思考。">
+
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
 
@@ -97,126 +98,98 @@
 <body>
 
 <header class="wrap">
-  <div class="brand" id="brand"></div>
-  <h1 id="tagline"></h1>
-  <p class="lede" id="lede"></p>
+  <div class="brand">zxmot</div>
+  <h1>把纠缠的东西<em>切开</em>。</h1>
+  <p class="lede">
+    一个关于解耦的工具与方法论集合。让内容、布局、逻辑与宿主各自独立演化。
+  </p>
 </header>
 
-<main class="wrap" id="main"></main>
+<main class="wrap">
+
+  <!-- ============ 工具 ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-label">Tools</span>
+      <span class="sec-title">工具</span>
+      <span class="sec-desc">可以直接拿去用的东西</span>
+    </div>
+    <div class="grid">
+
+      <a class="card" href="https://brk.zxmot.com" target="_blank" rel="noopener">
+        <div class="card-top">
+          <span class="card-name">brk</span>
+          <span class="card-arrow">↗</span>
+        </div>
+        <p class="card-desc">一个 &lt; 10kb 的微前端骨架。不引入虚拟 DOM，不做 diff，组件只渲染一次，更新由你掌控。</p>
+        <div class="card-tags">
+          <span class="tag">JSX</span>
+          <span class="tag">零依赖</span>
+          <span class="tag">&lt; 10kb</span>
+          <span class="tag">ESM</span>
+        </div>
+      </a>
+
+      <a class="card" href="https://ssb.zxmot.com" target="_blank" rel="noopener">
+        <div class="card-top">
+          <span class="card-name">SSB</span>
+          <span class="card-arrow">↗</span>
+        </div>
+        <p class="card-desc">静态网站构建器。让 AI 自由创作内容，让模板统一站点风格——基于原生 Shadow DOM，零运行时。</p>
+        <div class="card-tags">
+          <span class="tag">Shadow DOM</span>
+          <span class="tag">零运行时</span>
+          <span class="tag">模板化</span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ============ 思考 ============ -->
+  <section>
+    <div class="sec-head">
+      <span class="sec-label">Notes</span>
+      <span class="sec-title">思考</span>
+      <span class="sec-desc">还在成形中的方法论与提案</span>
+    </div>
+    <div class="grid">
+
+      <a class="card" href="https://blog.zxmot.com/proposals/debug-test-invokes.html" target="_blank" rel="noopener">
+        <div class="card-top">
+          <span class="card-name">把正在开发的功能，从宿主里抽出来</span>
+          <span class="card-arrow">↗</span>
+        </div>
+        <p class="card-desc">一种让「改逻辑」和「重启程序」彻底解耦的开发方式。验证成本从构建整个客户端，降到编译一条命令。</p>
+        <div class="card-tags">
+          <span class="tag">方法论</span>
+          <span class="tag">调试</span>
+        </div>
+      </a>
+
+      <a class="card" href="https://blog.zxmot.com/proposals/api-general-subject.html" target="_blank" rel="noopener">
+        <div class="card-top">
+          <span class="card-name">一个通用对象，穿越所有接口</span>
+          <span class="card-arrow">↗</span>
+        </div>
+        <p class="card-desc">Subject 是一个前后端通用的最小对象约定。前端对应 TypeScript 的任意对象，后端对应 Go 的 map[string]any——双方只取自己需要的字段。</p>
+        <div class="card-tags">
+          <span class="tag">接口约定</span>
+          <span class="tag">TypeScript</span>
+          <span class="tag">Go</span>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+</main>
 
 <footer>
-  <div class="wrap foot" id="foot"></div>
+  <div class="wrap foot">
+    <span>© 2026 zxmot</span>
+  </div>
 </footer>
 
-<script>
-/* ============================================================
-   1. 站点信息 —— 改这里
-   ============================================================ */
-const SITE = {
-  brand:   "zxmot",
-  tagline: "把纠缠的东西<em>切开</em>。",
-  lede:    "一个关于解耦的工具与方法论集合。让内容、布局、逻辑与宿主各自独立演化。",
-  links: [
-    // { label: "GitHub", url: "https://github.com/..." },
-    // { label: "Email",  url: "mailto:hi@zxmot.com" },
-  ],
-};
-
-/* ============================================================
-   2. 内容目录 —— 以后加东西，只动这个数组
-      新增一个分类：复制一个 { ... } 块
-      新增一个条目：往 items 里追加一个对象
-      空 items 的分类会自动隐藏
-   ============================================================ */
-const SECTIONS = [
-  {
-    id: "tools",
-    label: "Tools",
-    title: "工具",
-    desc: "可以直接拿去用的东西",
-    items: [
-      {
-        name: "brk",
-        desc: "一个 < 10kb 的微前端骨架。不引入虚拟 DOM，不做 diff，组件只渲染一次，更新由你掌控。",
-        url: "https://brk.zxmot.com",
-        tags: ["JSX", "零依赖", "< 10kb", "ESM"],
-      },
-      {
-        name: "SSB",
-        desc: "静态网站构建器。让 AI 自由创作内容，让模板统一站点风格——基于原生 Shadow DOM，零运行时。",
-        url: "https://ssb.zxmot.com",
-        tags: ["Shadow DOM", "零运行时", "模板化"],
-      },
-    ],
-  },
-  {
-    id: "notes",
-    label: "Notes",
-    title: "思考",
-    desc: "还在成形中的方法论，写下来是为了看清它",
-    items: [
-      {
-        name: "把正在开发的功能，从宿主里抽出来",
-        desc: "一种让「改逻辑」和「重启程序」彻底解耦的开发方式。验证成本从构建整个客户端，降到编译一条命令。",
-        url: "https://blog.zxmot.com/proposals/debug-test-invokes.html",
-        tags: ["方法论", "调试"],
-      },
-    ],
-  },
-
-  /* ---- 未来扩展示例（取消注释即可） ----
-  {
-    id: "labs",
-    label: "Labs",
-    title: "实验",
-    desc: "还不确定会不会成，但值得先做出来",
-    items: [
-      { name: "…", desc: "…", url: "…", tags: ["…"] },
-    ],
-  },
-  */
-];
-
-/* ============================================================
-   3. 渲染 —— 通常不需要改
-   ============================================================ */
-const esc = s => String(s).replace(/[&<>"']/g, c =>
-  ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
-
-document.getElementById("brand").textContent = SITE.brand;
-document.getElementById("tagline").innerHTML = SITE.tagline;
-document.getElementById("lede").textContent = SITE.lede;
-
-document.getElementById("main").innerHTML = SECTIONS
-  .filter(sec => sec.items && sec.items.length)
-  .map(sec => `
-    <section>
-      <div class="sec-head">
-        <span class="sec-label">${esc(sec.label)}</span>
-        <span class="sec-title">${esc(sec.title)}</span>
-        ${sec.desc ? `<span class="sec-desc">${esc(sec.desc)}</span>` : ""}
-      </div>
-      <div class="grid">
-        ${sec.items.map(it => `
-          <a class="card" href="${esc(it.url)}" target="_blank" rel="noopener">
-            <div class="card-top">
-              <span class="card-name">${esc(it.name)}</span>
-              <span class="card-arrow">↗</span>
-            </div>
-            <p class="card-desc">${esc(it.desc)}</p>
-            <div class="card-tags">
-              ${(it.tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join("")}
-            </div>
-          </a>
-        `).join("")}
-      </div>
-    </section>
-  `).join("");
-
-const year = new Date().getFullYear();
-document.getElementById("foot").innerHTML =
-  `<span>© ${year} ${esc(SITE.brand)}</span>` +
-  SITE.links.map(l => `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join("");
-</script>
 </body>
 </html>
