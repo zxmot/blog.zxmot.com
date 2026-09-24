@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>sugar — 让 map[string]any 拥有方法 · Go 语法糖</title>
+<meta name="description" content="一行类型别名，让 map[string]any 拥有方法。零成本、零侵入、IDE 友好的 Go 语法糖。">
+<style>
+  :root{
+    --bg:#0a0b12;
+    --bg-soft:#101220;
+    --card:#151828;
+    --card-2:#1b1f33;
+    --border:#262b45;
+    --text:#e7e9f3;
+    --muted:#8d93ad;
+    --brand:#7c5cff;
+    --brand-2:#22d3ee;
+    --good:#34d399;
+    --bad:#f87171;
+    --warn:#fbbf24;
+    --code-bg:#0d0f19;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--brand-2);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code,pre,kbd{
+    font-family:"JetBrains Mono","SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    font-size:13.5px;
+  }
+  :not(pre) > code{
+    background:rgba(124,92,255,.13);
+    border:1px solid rgba(124,92,255,.22);
+    color:#c9bcff;
+    padding:1px 6px;
+    border-radius:6px;
+    font-size:12.8px;
+    white-space:nowrap;
+  }
+
+  /* ---------- Nav ---------- */
+  nav{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(14px);
+    background:rgba(10,11,18,.82);
+    border-bottom:1px solid var(--border);
+  }
+  .nav-inner{
+    max-width:1080px;margin:0 auto;padding:12px 24px;
+    display:flex;align-items:center;gap:26px;
+  }
+  .logo{
+    font-weight:700;font-size:16px;letter-spacing:.3px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .logo .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    box-shadow:0 0 12px rgba(124,92,255,.8);
+  }
+  .nav-links{display:flex;gap:20px;margin-left:auto;font-size:13.5px}
+  .nav-links a{color:var(--muted)}
+  .nav-links a:hover{color:var(--text);text-decoration:none}
+  @media(max-width:760px){.nav-links{display:none}}
+
+  /* ---------- Layout ---------- */
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  section{padding:64px 0;border-top:1px solid var(--border)}
+  section:first-of-type{border-top:none}
+  h2{
+    font-size:26px;margin:0 0 8px;letter-spacing:-.4px;
+    display:flex;align-items:center;gap:10px;
+  }
+  h2 .num{
+    font-size:12px;font-weight:700;color:var(--brand);
+    background:rgba(124,92,255,.14);
+    border:1px solid rgba(124,92,255,.3);
+    padding:2px 8px;border-radius:6px;letter-spacing:.5px;
+  }
+  h3{font-size:17px;margin:32px 0 12px;letter-spacing:-.2px}
+  .lead{color:var(--muted);margin:0 0 28px;font-size:15px;max-width:760px}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    padding:80px 0 72px;
+    background:
+      radial-gradient(900px 420px at 20% -10%, rgba(124,92,255,.22), transparent 60%),
+      radial-gradient(700px 380px at 85% 0%, rgba(34,211,238,.13), transparent 60%);
+    border-bottom:1px solid var(--border);
+  }
+  .badge{
+    display:inline-block;
+    font-size:12px;letter-spacing:.6px;
+    color:#b9a8ff;
+    background:rgba(124,92,255,.12);
+    border:1px solid rgba(124,92,255,.3);
+    padding:5px 13px;border-radius:999px;margin-bottom:22px;
+  }
+  .hero h1{
+    font-size:58px;line-height:1.05;margin:0 0 16px;
+    letter-spacing:-2px;
+    background:linear-gradient(120deg,#fff 20%,#b9a8ff 55%,#22d3ee 90%);
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+  .hero .tagline{font-size:22px;color:#cfd3e6;margin:0 0 10px;font-weight:500}
+  .hero .sub{font-size:15px;color:var(--muted);max-width:680px;margin:0 0 30px}
+  .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
+  .btn{
+    display:inline-block;padding:11px 22px;border-radius:10px;
+    border:1px solid var(--border);background:var(--card);
+    color:var(--text);font-size:14px;font-weight:500;
+    transition:.18s;
+  }
+  .btn:hover{border-color:#3d4468;text-decoration:none;transform:translateY(-1px)}
+  .btn.primary{
+    background:linear-gradient(135deg,var(--brand),#5b8cff);
+    border-color:transparent;color:#fff;
+    box-shadow:0 6px 22px rgba(124,92,255,.35);
+  }
+  .btn.primary:hover{box-shadow:0 8px 28px rgba(124,92,255,.5)}
+
+  /* ---------- Code ---------- */
+  pre{
+    background:var(--code-bg);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px 20px;
+    overflow-x:auto;
+    margin:0;
+    line-height:1.75;
+    position:relative;
+  }
+  pre::-webkit-scrollbar{height:8px}
+  pre::-webkit-scrollbar-thumb{background:#2c3252;border-radius:4px}
+  .code-block{margin:18px 0}
+  .code-block .cap{
+    font-size:12px;color:var(--muted);
+    display:flex;align-items:center;gap:8px;
+    margin-bottom:9px;letter-spacing:.3px;
+  }
+  .cap .tag{
+    font-size:11px;padding:2px 8px;border-radius:5px;
+    border:1px solid var(--border);background:var(--card);
+  }
+  .cap .tag.good{color:var(--good);border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.1)}
+  .cap .tag.bad{color:var(--bad);border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.08)}
+  .cap .tag.old{color:var(--warn);border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.08)}
+
+  .k{color:#c084fc}
+  .t{color:#22d3ee}
+  .s{color:#86efac}
+  .c{color:#5b6178;font-style:italic}
+  .f{color:#7dd3fc}
+  .n{color:#fbbf24}
+
+  /* ---------- Two-column compare ---------- */
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:880px){.duo{grid-template-columns:1fr}}
+  .pane{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px;
+  }
+  .pane.win{border-color:rgba(52,211,153,.4);box-shadow:0 0 0 1px rgba(52,211,153,.08) inset, 0 10px 40px -20px rgba(52,211,153,.5)}
+  .pane .head{
+    display:flex;align-items:center;gap:9px;
+    font-size:13px;font-weight:600;margin-bottom:12px;
+  }
+  .pane .head .mark{font-size:15px}
+  .pane.win .head{color:var(--good)}
+  .pane .head{color:var(--muted)}
+  .pane pre{background:transparent;border:none;padding:0;font-size:13px}
+
+  /* ---------- Cards ---------- */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:600px){.grid{grid-template-columns:1fr}}
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px;
+    transition:.2s;
+  }
+  .card:hover{border-color:#343a5c;transform:translateY(-2px);background:var(--card-2)}
+  .card .ico{font-size:22px;margin-bottom:10px;display:block}
+  .card h4{margin:0 0 6px;font-size:15px}
+  .card p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.65}
+
+  /* ---------- Table ---------- */
+  .table-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--card)}
+  table{border-collapse:collapse;width:100%;min-width:760px;font-size:13.5px}
+  th,td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+  th{
+    font-size:12px;letter-spacing:.5px;color:var(--muted);font-weight:600;
+    background:rgba(255,255,255,.02);white-space:nowrap;
+  }
+  tr:last-child td{border-bottom:none}
+  td.win-col{background:rgba(52,211,153,.05)}
+  th.win-col{color:var(--good);background:rgba(52,211,153,.08)}
+  .yes{color:var(--good);font-weight:600}
+  .no{color:var(--bad)}
+  .mid{color:var(--warn)}
+
+  /* ---------- Callout ---------- */
+  .callout{
+    border-left:3px solid var(--brand);
+    background:linear-gradient(90deg,rgba(124,92,255,.09),transparent);
+    padding:14px 18px;border-radius:0 10px 10px 0;
+    font-size:14px;color:#c6cadd;margin:20px 0;
+  }
+  .callout.warn{border-left-color:var(--warn);background:linear-gradient(90deg,rgba(251,191,36,.09),transparent)}
+  .callout.good{border-left-color:var(--good);background:linear-gradient(90deg,rgba(52,211,153,.09),transparent)}
+
+  /* ---------- API list ---------- */
+  .api-row{
+    display:grid;grid-template-columns:210px 1fr;gap:16px;
+    padding:16px 0;border-bottom:1px solid var(--border);
+  }
+  .api-row:last-child{border-bottom:none}
+  .api-row .sig{font-family:"JetBrains Mono",monospace;font-size:13px;color:#c9bcff;word-break:break-all}
+  .api-row .desc{font-size:13.5px;color:var(--muted)}
+  @media(max-width:640px){.api-row{grid-template-columns:1fr;gap:6px}}
+
+  /* ---------- FAQ ---------- */
+  details{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:10px;padding:0 18px;margin-bottom:10px;
+  }
+  details[open]{border-color:#343a5c}
+  summary{
+    cursor:pointer;padding:15px 0;font-size:14.5px;font-weight:500;
+    list-style:none;display:flex;align-items:center;gap:10px;
+  }
+  summary::-webkit-details-marker{display:none}
+  summary::before{
+    content:"+";color:var(--brand);font-weight:700;font-size:17px;
+    width:16px;flex:none;
+  }
+  details[open] summary::before{content:"−"}
+  details .ans{padding:0 0 16px 26px;font-size:13.8px;color:var(--muted)}
+  details .ans p{margin:0 0 10px}
+
+  /* ---------- Footer ---------- */
+  footer{
+    border-top:1px solid var(--border);
+    padding:36px 0 56px;
+    color:var(--muted);font-size:13px;
+    text-align:center;
+  }
+  footer .heart{color:var(--brand)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="logo"><span class="dot"></span>sugar</div>
+    <div class="nav-links">
+      <a href="#why">为什么</a>
+      <a href="#install">安装</a>
+      <a href="#usage">用法</a>
+      <a href="#compare">对比</a>
+      <a href="#api">API</a>
+      <a href="#perf">性能</a>
+      <a href="#faq">FAQ</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="badge">Go 1.18+ · 零依赖 · 零成本 · 零侵入</span>
+    <h1>sugar</h1>
+    <p class="tagline">让 <code>map[string]any</code> 拥有方法。</p>
+    <p class="sub">
+      一行类型别名，告别 <code>test["name"].(string)</code> 的啰嗦，
+      也告别 <code>sugar.Text(test, "name")</code> 这种 IDE 补全不友好的包级函数。
+    </p>
+
+    <div class="code-block" style="max-width:640px">
+      <pre><span class="c">// 以前</span>
+name, _ := test[<span class="s">"name"</span>].(<span class="t">string</span>)
+
+<span class="c">// 现在</span>
+name := <span class="f">sugar</span>.<span class="t">Object</span>(test).<span class="f">Name</span>()</pre>
+    </div>
+
+    <div class="cta">
+      <a class="btn primary" href="#install">快速开始</a>
+      <a class="btn" href="#compare">看看香在哪 →</a>
+    </div>
+  </div>
+</header>
+
+<!-- ============ 1. WHY ============ -->
+<section id="why">
+  <div class="wrap">
+    <h2><span class="num">01</span>它解决了什么</h2>
+    <p class="lead">
+      <code>type Object = map[string]any</code> 在 Go 里几乎无处不在：JSON 解析结果、动态配置、RPC 的 payload……
+      但每次取值都是一场小型仪式。
+    </p>
+
+    <div class="duo">
+      <div class="pane">
+        <div class="head"><span class="mark">😩</span> 现状：三种写法，三种别扭</div>
+        <pre><span class="c">// ① 原生：两行起步，还要处理 ok</span>
+name, ok := test[<span class="s">"name"</span>].(<span class="t">string</span>)
+<span class="k">if</span> !ok {
+    name = <span class="s">""</span>
+}
+
+<span class="c">// ② 原生暴力版：随时可能 panic</span>
+name := test[<span class="s">"name"</span>].(<span class="t">string</span>)
+
+<span class="c">// ③ 包级工具函数：省了一点，但……</span>
+name  := <span class="f">sugar</span>.<span class="f">Text</span>(test, <span class="s">"name"</span>)
+text  := <span class="f">sugar</span>.<span class="f">String</span>(test[<span class="s">"text"</span>])
+num   := <span class="f">sugar</span>.<span class="f">Int</span>(test, <span class="s">"num"</span>)   <span class="c">// 谁记得住顺序？</span>
+flag  := <span class="f">sugar</span>.<span class="f">Bool</span>(test, <span class="s">"flag"</span>)
+<span class="c">// ……sugar 包越来越大，命名空间越来越脏</span></pre>
+      </div>
+
+      <div class="pane win">
+        <div class="head"><span class="mark">🍬</span> 现在：方法调用，一步到位</div>
+        <pre><span class="c">// 单次使用，连别名都不用声明</span>
+name := <span class="f">sugar</span>.<span class="t">Object</span>(test).<span class="f">Name</span>()
+
+<span class="c">// 想多处使用？一行别名</span>
+<span class="k">type</span> obj = <span class="f">sugar</span>.<span class="t">Object</span>
+
+name := <span class="f">obj</span>(test).<span class="f">Name</span>()
+note := <span class="f">obj</span>(test).<span class="f">Text</span>(<span class="s">"note"</span>)
+age  := <span class="f">obj</span>(test).<span class="f">Text</span>(<span class="s">"age"</span>)   <span class="c">// 字段不存在？返回 ""</span>
+
+<span class="c">// 敲下 "." 的那一刻，所有方法都在等你 ↓</span></pre>
+      </div>
+    </div>
+
+    <h3>一句话总结</h3>
+    <div class="callout good">
+      <strong>把「函数」伪装成「方法」。</strong>
+      <code>Object</code> 是一个底层类型为 <code>map[string]any</code> 的定义类型，
+      于是所有取值逻辑都能挂到它自己身上，拥有独立命名空间，而类型转换本身<strong>不产生任何运行时开销</strong>。
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. INSTALL ============ -->
+<section id="install">
+  <div class="wrap">
+    <h2><span class="num">02</span>安装</h2>
+    <p class="lead">单文件包，零第三方依赖，直接拖进项目也能跑。</p>
+    <div class="code-block">
+      <pre>go get github.com/yourname/sugar</pre>
+    </div>
+    <div class="code-block">
+      <pre><span class="k">import</span> <span class="s">"github.com/yourname/sugar"</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. USAGE ============ -->
+<section id="usage">
+  <div class="wrap">
+    <h2><span class="num">03</span>两种用法</h2>
+    <p class="lead">按使用频率选，代码风格完全一致。</p>
+
+    <h3>用法 A · 单次使用 —— 零声明</h3>
+    <p class="lead" style="margin-bottom:12px">直接用完整包名转换，不需要任何前置声明。临时脚本、工具函数里的首选。</p>
+    <div class="code-block">
+      <pre><span class="k">import</span> <span class="s">"github.com/yourname/sugar"</span>
+
+test := <span class="k">map</span>[<span class="t">string</span>]<span class="t">any</span>{
+    <span class="s">"name"</span>: <span class="s">"hello"</span>,
+    <span class="s">"note"</span>: <span class="s">"world"</span>,
+}
+
+name := <span class="f">sugar</span>.<span class="t">Object</span>(test).<span class="f">Name</span>()   <span class="c">// "hello"</span></pre>
+    </div>
+
+    <h3>用法 B · 多次使用 —— 一行别名</h3>
+    <p class="lead" style="margin-bottom:12px">
+      在本地包里声明类型别名 <code>type obj = sugar.Object</code>（注意是 <code>=</code>，完全等价，零开销），
+      之后整个包内都能像用内置类型一样使用。
+    </p>
+    <div class="code-block">
+      <pre><span class="k">package</span> main
+
+<span class="k">import</span> <span class="s">"github.com/yourname/sugar"</span>
+
+<span class="c">// 一行搞定，之后随手就用，不必再写 sugar. 前缀</span>
+<span class="k">type</span> obj = <span class="f">sugar</span>.<span class="t">Object</span>
+
+<span class="k">func</span> <span class="f">main</span>() {
+    test := <span class="k">map</span>[<span class="t">string</span>]<span class="t">any</span>{
+        <span class="s">"name"</span>: <span class="s">"hello"</span>,
+        <span class="s">"note"</span>: <span class="s">"world"</span>,
+    }
+
+    name := <span class="f">obj</span>(test).<span class="f">Name</span>()          <span class="c">// 高频快捷方式</span>
+    note := <span class="f">obj</span>(test).<span class="f">Text</span>(<span class="s">"note"</span>)    <span class="c">// 通用取字段</span>
+    age  := <span class="f">obj</span>(test).<span class="f">Text</span>(<span class="s">"age"</span>)     <span class="c">// 字段不存在 → ""</span>
+    raw  := <span class="f">obj</span>(test).<span class="f">Raw</span>()            <span class="c">// 原样返回，可继续链式</span>
+
+    fmt.<span class="f">Println</span>(name, note, age, raw)
+}</pre>
+    </div>
+
+    <div class="callout">
+      <strong>为什么用 <code>type obj = ...</code> 而不是 <code>type obj ...</code>？</strong>
+      因为 <code>=</code> 是类型别名（alias），<code>obj</code> 和 <code>sugar.Object</code> 是<strong>同一个类型</strong>，
+      不会产生新的类型身份，也就不会有任何隐式转换成本。名字取 <code>obj</code>、<code>o</code>、<code>m</code> 随你喜好，纯本地约定。
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. COMPARE ============ -->
+<section id="compare">
+  <div class="wrap">
+    <h2><span class="num">04</span>三种写法横向对比</h2>
+    <p class="lead">拿你日常写的那段代码，一比就清楚了。</p>
+
+    <div class="code-block">
+      <div class="cap"><span class="tag old">旧写法</span> 同一个 main，三种风格混在一起</div>
+      <pre><span class="k">type</span> obj = <span class="f">sugar</span>.<span class="t">Object</span>
+
+<span class="k">func</span> <span class="f">main</span>() {
+    test := <span class="k">map</span>[<span class="t">string</span>]<span class="t">any</span>{
+        <span class="s">"name"</span>: <span class="s">"hello"</span>,
+        <span class="s">"note"</span>: <span class="s">"world"</span>,
+    }
+
+    <span class="c">// ✅ 语法糖 · 单次直接使用</span>
+    <span class="c">// name := sugar.Object(test).Name()</span>
+
+    <span class="c">// ✅ 语法糖 · 本地别名，多处复用</span>
+    name := <span class="f">obj</span>(test).<span class="f">Name</span>()
+    note := <span class="f">obj</span>(test).<span class="f">Text</span>(<span class="s">"note"</span>)
+
+    <span class="c">// ❌ 原生写法：啰嗦，还得自己兜底</span>
+    name, _ = test[<span class="s">"name"</span>].(<span class="t">string</span>)
+
+    <span class="c">// ❌ 旧写法一：包级函数，参数顺序靠记忆</span>
+    more := <span class="f">sugar</span>.<span class="f">Text</span>(test, <span class="s">"more"</span>)
+
+    <span class="c">// ❌ 旧写法二：包级工具类，层层嵌套</span>
+    text := <span class="f">sugar</span>.<span class="f">String</span>(test[<span class="s">"text"</span>])
+
+    fmt.<span class="f">Println</span>(name + note + more + text)
+}</pre>
+    </div>
+
+    <div class="table-scroll" style="margin-top:32px">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:150px">对比维度</th>
+            <th>原生写法<br><span style="font-weight:400;color:#666">test["x"].(string)</span></th>
+            <th>包级工具函数<br><span style="font-weight:400;color:#666">sugar.Text(test, "x")</span></th>
+            <th class="win-col">🍬 sugar 语法糖<br><span style="font-weight:400">obj(test).Text("x")</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>代码长度</td>
+            <td class="no">长，还要处理 ok</td>
+            <td class="mid">中</td>
+            <td class="win-col"><span class="yes">最短</span></td>
+          </tr>
+          <tr>
+            <td>类型断言</td>
+            <td class="no">每次手写</td>
+            <td class="yes">已封装</td>
+            <td class="win-col"><span class="yes">已封装</span></td>
+          </tr>
+          <tr>
+            <td>参数语义</td>
+            <td>—</td>
+            <td class="mid">「谁」和「哪个字段」容易记反</td>
+            <td class="win-col"><span class="yes">主体是接收者，字段是参数，语义天然清晰</span></td>
+          </tr>
+          <tr>
+            <td>IDE 自动补全</td>
+            <td class="no">❌ 无</td>
+            <td class="mid">⚠️ 得先想起函数名，还得翻文档确认参数</td>
+            <td class="win-col"><span class="yes">✅ 敲 <code>.</code> 之后 Name / Text / Raw 全部列出</span></td>
+          </tr>
+          <tr>
+            <td>命名空间</td>
+            <td>—</td>
+            <td class="no">❌ 全部堆在 sugar 包级，<code>Text</code>/<code>String</code>/<code>Int</code>/<code>Bool</code>… 越加越多</td>
+            <td class="win-col"><span class="yes">✅ 收敛到 <code>Object</code> 类型上，互不干扰</span></td>
+          </tr>
+          <tr>
+            <td>链式调用</td>
+            <td class="no">❌</td>
+            <td class="no">❌</td>
+            <td class="win-col"><span class="yes">✅ <code>obj(m).Raw().Text("a")</code></span></td>
+          </tr>
+          <tr>
+            <td>运行时开销</td>
+            <td>0</td>
+            <td>0</td>
+            <td class="win-col"><span class="yes">0（转换在编译期完成）</span></td>
+          </tr>
+          <tr>
+            <td>对现有代码的侵入</td>
+            <td>—</td>
+            <td>—</td>
+            <td class="win-col"><span class="yes">0，<code>map[string]any</code> 定义原封不动</span></td>
+          </tr>
+          <tr>
+            <td>渐进式采用</td>
+            <td>—</td>
+            <td class="mid">引入即全局</td>
+            <td class="win-col"><span class="yes">✅ 想用就用，一行一用，删掉也不影响别处</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5. WHY IT'S GOOD ============ -->
+<section>
+  <div class="wrap">
+    <h2><span class="num">05</span>香在哪：六个细节</h2>
+    <p class="lead">语法糖的价值从来不在于「少打几个字」，而在于它顺着你的直觉走。</p>
+
+    <div class="grid">
+      <div class="card">
+        <span class="ico">🎯</span>
+        <h4>IDE 补全终于有用了</h4>
+        <p>敲下 <code>obj(test).</code> 的瞬间，所有可用方法全部弹出。<code>sugar.Text(test, "x")</code> 你得先想起 <code>Text</code> 这个名字，还得确认第一个参数是不是 map。</p>
+      </div>
+      <div class="card">
+        <span class="ico">⚡</span>
+        <h4>零成本转换</h4>
+        <p><code>Object(test)</code> 是编译期的类型转换，底层表示完全相同，不复制 map、不分配内存。生成代码和你手写类型断言几乎一致。</p>
+      </div>
+      <div class="card">
+        <span class="ico">🧩</span>
+        <h4>零侵入</h4>
+        <p>不需要改任何现有的 <code>map[string]any</code> 定义，不需要给上游 JSON 结构加 tag，不需要包装成结构体。它就在那里，随时可转。</p>
+      </div>
+      <div class="card">
+        <span class="ico">🧼</span>
+        <h4>命名空间干净</h4>
+        <p>所有取值逻辑挂在 <code>Object</code> 这一个类型上。以后再加 <code>Int</code>、<code>Bool</code>、<code>Slice</code>，也只在 <code>.</code> 后面出现，不会污染 <code>sugar</code> 包级。</p>
+      </div>
+      <div class="card">
+        <span class="ico">🔗</span>
+        <h4>天然可链式</h4>
+        <p>方法返回 <code>Object</code> 或具体值，组合起来毫无阻碍。未来加 <code>Obj("nested")</code> 就能一路 <code>obj(m).Obj("a").Text("b")</code> 走下去。</p>
+      </div>
+      <div class="card">
+        <span class="ico">🪶</span>
+        <h4>渐进式采用</h4>
+        <p>老代码一行不改，新代码想用就用。哪怕只在某一个函数里写一次 <code>sugar.Object(test).Name()</code>，也完全成立。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6. API ============ -->
+<section id="api">
+  <div class="wrap">
+    <h2><span class="num">06</span>API 参考</h2>
+    <p class="lead">核心实现只有十几行，全部方法都「宽松」：类型不符或字段不存在时返回零值，绝不 panic。</p>
+
+    <div class="code-block">
+      <div class="cap"><span class="tag good">sugar/object.go</span></div>
+      <pre><span class="k">package</span> sugar
+
+<span class="c">// Object 侵入性极低，且此处类型转换无任何性能成本</span>
+<span class="k">type</span> <span class="t">Object</span> <span class="k">map</span>[<span class="t">string</span>]<span class="t">any</span>
+
+<span class="c">// Name 特别常用，因为每一个结构体几乎都需要一个名称</span>
+<span class="k">func</span> (v <span class="t">Object</span>) <span class="f">Name</span>() <span class="t">string</span> {
+    x, _ := v[<span class="s">"name"</span>].(<span class="t">string</span>)
+    <span class="k">return</span> x
+}
+
+<span class="c">// Text or Field or String</span>
+<span class="k">func</span> (v <span class="t">Object</span>) <span class="f">Text</span>(field <span class="t">string</span>) <span class="t">string</span> {
+    x, _ := v[field].(<span class="t">string</span>)
+    <span class="k">return</span> x
+}
+
+<span class="c">// Raw or Json</span>
+<span class="k">func</span> (v <span class="t">Object</span>) <span class="f">Raw</span>() <span class="t">Object</span> {
+    <span class="k">return</span> v
+}</pre>
+    </div>
+
+    <h3>方法一览</h3>
+    <div class="api-row">
+      <div class="sig">func (v Object) Name() string</div>
+      <div class="desc">快捷读取 <code>name</code> 字段。这是出现频率最高的字段——每个结构体几乎都需要一个名称。</div>
+    </div>
+    <div class="api-row">
+      <div class="sig">func (v Object) Text(field string) string</div>
+      <div class="desc">读取任意字段为 <code>string</code>。字段不存在或类型不符时返回 <code>""</code>。想叫 <code>Field</code> / <code>String</code> 也行，看你项目的命名习惯。</div>
+    </div>
+    <div class="api-row">
+      <div class="sig">func (v Object) Raw() Object</div>
+      <div class="desc">原样返回自身。用于链式收尾，或显式表达「我要的是这个 map 本身」。</div>
+    </div>
+
+    <h3>扩展它</h3>
+    <p class="lead" style="margin-bottom:12px">按同样的套路，往 <code>sugar</code> 包里继续加方法即可。每个方法都是三行，加多少都不心疼。</p>
+    <div class="code-block">
+      <pre><span class="k">func</span> (v <span class="t">Object</span>) <span class="f">Int</span>(field <span class="t">string</span>) <span class="t">int</span> {
+    x, _ := v[field].(<span class="t">int</span>)
+    <span class="k">return</span> x
+}
+
+<span class="k">func</span> (v <span class="t">Object</span>) <span class="f">Bool</span>(field <span class="t">string</span>) <span class="t">bool</span> {
+    x, _ := v[field].(<span class="t">bool</span>)
+    <span class="k">return</span> x
+}
+
+<span class="c">// 嵌套取值，链式更顺</span>
+<span class="k">func</span> (v <span class="t">Object</span>) <span class="f">Obj</span>(field <span class="t">string</span>) <span class="t">Object</span> {
+    x, _ := v[field].(<span class="k">map</span>[<span class="t">string</span>]<span class="t">any</span>)
+    <span class="k">return</span> <span class="t">Object</span>(x)
+}
+
+<span class="c">// 用法</span>
+<span class="c">// port := obj(cfg).Obj("server").Int("port")</span>
+<span class="c">// ok   := obj(cfg).Bool("debug")</span></pre>
+    </div>
+
+    <h3>旧封装（保留作为对照）</h3>
+    <div class="code-block">
+      <div class="cap"><span class="tag bad">不推荐</span> 包级工具类函数，IDE 提示不友好</div>
+      <pre><span class="k">package</span> sugar
+
+<span class="k">func</span> <span class="f">Text</span>(v <span class="t">Object</span>, field <span class="t">string</span>) <span class="t">string</span> {
+    x, _ := v[field].(<span class="t">string</span>)
+    <span class="k">return</span> x
+}
+
+<span class="k">func</span> <span class="f">String</span>(v <span class="t">any</span>) <span class="t">string</span> {
+    x, _ := v.(<span class="t">string</span>)
+    <span class="k">return</span> x
+}</pre>
+    </div>
+    <div class="callout warn">
+      <strong>为什么保留它们？</strong>
+      兼容老代码，同时作为「反面教材」——包级函数越加越多，<code>sugar.Text</code>、<code>sugar.String</code>、<code>sugar.Int</code>、<code>sugar.Bool</code>……
+      最终整个包变成一个巨大的扁平命名空间，补全列表里全是长得差不多的名字。
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7. PERF ============ -->
+<section id="perf">
+  <div class="wrap">
+    <h2><span class="num">07</span>性能：真的零成本</h2>
+    <p class="lead">
+      <code>Object(test)</code> 不是函数调用，是 Go 的类型转换。因为 <code>Object</code> 的底层类型就是 <code>map[string]any</code>，
+      编译器在编译期就完成了「换标签」这个动作，运行时<strong>没有额外指令、没有内存分配、没有 map 复制</strong>。
+    </p>
+
+    <div class="duo">
+      <div class="pane">
+        <div class="head"><span class="mark">🔬</span> 你可以自己验证</div>
+        <pre><span class="k">func</span> <span class="f">BenchmarkNative</span>(b *testing.B) {
+    m := <span class="k">map</span>[<span class="t">string</span>]<span class="t">any</span>{<span class="s">"name"</span>: <span class="s">"hello"</span>}
+    <span class="k">for</span> i := <span class="n">0</span>; i &lt; b.N; i++ {
+        _ = m[<span class="s">"name"</span>].(<span class="t">string</span>)
+    }
+}
+
+<span class="k">func</span> <span class="f">BenchmarkSugar</span>(b *testing.B) {
+    m := <span class="f">sugar</span>.<span class="t">Object</span>(<span class="k">map</span>[<span class="t">string</span>]<span class="t">any</span>{<span class="s">"name"</span>: <span class="s">"hello"</span>})
+    <span class="k">for</span> i := <span class="n">0</span>; i &lt; b.N; i++ {
+        _ = m.<span class="f">Name</span>()
+    }
+}</pre>
+      </div>
+      <div class="pane win">
+        <div class="head"><span class="mark">✅</span> 结论</div>
+        <pre><span class="c">// 两者生成的机器码本质相同：</span>
+<span class="c">// 一次 map lookup + 一次类型断言</span>
+<span class="c">// 二者都是 0 allocs/op</span>
+
+<span class="c">// Object(test) 这一层的开销 = 0</span>
+<span class="c">// 它只是一个编译期的类型视图切换</span>
+
+<span class="c">// 也就是说：</span>
+<span class="c">// 你只是把「函数」写成了「方法」，</span>
+<span class="c">// 编译器完全不在乎，但你的手在乎。</span></pre>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>关于 map 的传递：</strong>
+      Go 的 map 是引用类型，<code>Object</code> 和原来的 <code>map[string]any</code> 指向<strong>同一份底层数据</strong>。
+      通过 <code>obj(m)</code> 修改字段，原始的 <code>m</code> 也会同步变化——这正是我们想要的。
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8. FAQ ============ -->
+<section id="faq">
+  <div class="wrap">
+    <h2><span class="num">08</span>常见问题</h2>
+
+    <details open>
+      <summary><code>Object</code> 和 <code>map[string]any</code> 能互相赋值吗？</summary>
+      <div class="ans">
+        <p>可以，双向都不需要显式转换。因为 <code>map[string]any</code> 是类型字面量（非定义类型），而 <code>Object</code> 的底层类型与它相同，满足 Go 的可赋值条件。</p>
+        <p>所以 <code>var m map[string]any = obj(test)</code> 和 <code>var o sugar.Object = test</code> 都能编译通过。当然，写 <code>sugar.Object(test)</code> 更显式也更清晰，同样零开销。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>字段不存在或类型不对会 panic 吗？</summary>
+      <div class="ans">
+        <p>不会。所有方法内部都用了 <code>x, _ := v[field].(string)</code> 这种 comma-ok 形式，失败时返回<strong>零值</strong>（字符串就是 <code>""</code>）。</p>
+        <p>这是刻意的设计——动态 map 本来就不该因为少一个字段就炸掉程序。如果你需要严格校验，自己加一个 <code>MustText</code> 之类的变体即可。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>能不能不加 <code>sugar.</code> 前缀，直接用 <code>Object</code>？</summary>
+      <div class="ans">
+        <p>可以，用点导入：<code>import . "github.com/yourname/sugar"</code>。但不推荐——点导入会污染当前文件的命名空间，而且读代码时看不出 <code>Object</code> 来自哪里。</p>
+        <p>更好的方案就是文档里推荐的：<code>type obj = sugar.Object</code>。它短、明确、零成本，而且一看就知道是你本地的约定。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>为什么 <code>Name()</code> 是独立方法，而其他字段用 <code>Text("xxx")</code>？</summary>
+      <div class="ans">
+        <p>因为 <code>name</code> 的出现频率远高于其他字段——几乎每个结构体、每份 JSON、每个动态对象都有一个名称。给它一个专属快捷方式，能省下大量重复输入。</p>
+        <p>如果你项目里还有别的超高频字段（比如 <code>id</code>、<code>type</code>、<code>status</code>），完全可以照葫芦画瓢加 <code>ID()</code>、<code>Type()</code>。这就是方法命名空间的优势：加多少都不会乱。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>怎么给 <code>Object</code> 加自己的方法？</summary>
+      <div class="ans">
+        <p>Go 不允许在别的包里给外部类型定义方法，所以扩展必须在 <code>sugar</code> 包内完成。三个选择：</p>
+        <p>① 给上游提 PR —— 通用性强的取值方法（<code>Int</code>、<code>Bool</code>、<code>Slice</code>、<code>Obj</code>）非常欢迎；<br>
+           ② Fork 一份，加自己业务专属的方法；<br>
+           ③ 在你自己的包里复制这个类型（十几行），叫 <code>myobj.Object</code> 之类，完全自主。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>和「直接定义结构体」相比呢？</summary>
+      <div class="ans">
+        <p>两者不冲突，场景不同。</p>
+        <p><strong>结构体</strong>适合字段固定、需要编译期校验、需要序列化的场景；<strong>sugar.Object</strong> 适合字段动态、来源不可控、只需要快速取几个值的场景——比如解析第三方 API 的 JSON、处理插件配置、写一次性脚本。</p>
+        <p>很多时候你会两者同时用：外层用结构体，某个 <code>map[string]any</code> 类型的扩展字段用 sugar 取值。</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>会不会有人觉得这是「滥用方法」？</summary>
+      <div class="ans">
+        <p>这正是它的争议点，也是它的乐趣所在。严格来说，把纯取值函数伪装成方法确实有点「非 Go 正统」。</p>
+        <p>但换个角度：<code>Object</code> 的底层就是 map，它本来就代表「一个对象」，让对象拥有读取自己字段的方法，语义上完全说得通。而且零成本、零侵入、渐进可用——如果这都不算语法糖，那什么算？</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>MIT License · 用 <span class="heart">♥</span> 写 Go</p>
+    <p style="margin-top:6px;opacity:.7">sugar — 让 <code>map[string]any</code> 拥有方法</p>
+  </div>
+</footer>
+
+</body>
+</html>
