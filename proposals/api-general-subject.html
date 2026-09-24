@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subject · 通用对象传输提案</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-elev: #161b22;
+    --bg-code: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --accent: #58a6ff;
+    --accent-dim: #1f6feb;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --purple: #bc8cff;
+    --pink: #ff7b72;
+    --cyan: #79c0ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    line-height: 1.7;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, pre, .mono {
+    font-family: "SF Mono", "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---------- Header ---------- */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
+    position: sticky; top: 0;
+    background: rgba(13,17,23,0.85);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+  .header-inner {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 700; font-size: 17px; letter-spacing: -0.02em;
+  }
+  .logo-mark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    border-radius: 7px;
+    color: #0d1117; font-size: 15px; font-weight: 800;
+  }
+  nav { display: flex; gap: 20px; font-size: 14px; }
+  nav a { color: var(--text-dim); }
+  nav a:hover { color: var(--text); text-decoration: none; }
+  @media (max-width: 760px) { nav { display: none; } }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    padding: 88px 0 72px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(88,166,255,0.08), transparent 60%);
+    pointer-events: none;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+    letter-spacing: 0.02em;
+  }
+  .badge .dot {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--green);
+  }
+  h1 {
+    font-size: clamp(34px, 5.5vw, 56px);
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+    font-weight: 800;
+    margin-bottom: 22px;
+  }
+  h1 .grad {
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .lede {
+    font-size: 19px;
+    color: var(--text-dim);
+    max-width: 700px;
+    margin-bottom: 34px;
+  }
+  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 14px; font-weight: 600;
+    border: 1px solid var(--border);
+    color: var(--text);
+    background: var(--bg-elev);
+    transition: all .15s;
+    cursor: pointer;
+  }
+  .btn:hover { border-color: var(--accent); text-decoration: none; }
+  .btn.primary {
+    background: var(--accent); color: #0d1117; border-color: var(--accent);
+  }
+  .btn.primary:hover { background: #79b8ff; }
+
+  /* ---------- Sections ---------- */
+  section { padding: 68px 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+  h2 {
+    font-size: 26px; font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  h2 .num {
+    font-size: 13px; font-weight: 700;
+    color: var(--accent);
+    background: rgba(88,166,255,0.12);
+    border: 1px solid rgba(88,166,255,0.3);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-family: "SF Mono", monospace;
+  }
+  h3 {
+    font-size: 17px; font-weight: 700;
+    margin: 32px 0 12px;
+    color: var(--text);
+  }
+  h3:first-of-type { margin-top: 20px; }
+  .sub {
+    color: var(--text-dim);
+    margin-bottom: 30px;
+    font-size: 15px;
+  }
+  p { margin-bottom: 14px; color: #c9d1d9; }
+  ul, ol { margin: 12px 0 18px 22px; color: #c9d1d9; }
+  li { margin-bottom: 6px; }
+  strong { color: var(--text); font-weight: 600; }
+
+  /* ---------- Code ---------- */
+  pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-size: 13.5px;
+    line-height: 1.68;
+    margin: 14px 0;
+    position: relative;
+  }
+  pre .lang {
+    position: absolute;
+    top: 8px; right: 12px;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  :not(pre) > code {
+    background: rgba(110,118,129,0.25);
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: 13.5px;
+    color: #ffa657;
+  }
+  .tok-key { color: var(--pink); }
+  .tok-str { color: #a5d6ff; }
+  .tok-num { color: var(--cyan); }
+  .tok-com { color: var(--text-dim); font-style: italic; }
+  .tok-fn  { color: var(--purple); }
+  .tok-typ { color: #ffa657; }
+  .tok-var { color: #ffa657; }
+  .tok-prop { color: #d2a8ff; }
+  .tok-opt  { color: var(--text-dim); }
+  .tok-warn { color: var(--yellow); }
+
+  /* ---------- Compare ---------- */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+  @media (max-width: 700px) { .compare { grid-template-columns: 1fr; } }
+  .compare .card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    background: var(--bg-elev);
+  }
+  .compare .card.bad { border-color: rgba(248,81,73,0.4); }
+  .compare .card.good { border-color: rgba(63,185,80,0.4); }
+  .compare .card h4 {
+    font-size: 14px; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .compare .card.bad h4 { color: var(--red); }
+  .compare .card.good h4 { color: var(--green); }
+  .compare .card pre { margin: 0; font-size: 12.5px; }
+
+  /* ---------- Field groups ---------- */
+  .field-group { margin: 30px 0; }
+  .field-group-title {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .field-group-title .line {
+    flex: 1; height: 1px; background: var(--border);
+  }
+  .fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+  }
+  .field {
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 13px 15px;
+    background: var(--bg-elev);
+    transition: border-color .15s, transform .15s;
+  }
+  .field:hover { border-color: var(--accent-dim); }
+  .field.deprecated { opacity: 0.62; }
+  .field-head {
+    display: flex; align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+    flex-wrap: wrap;
+  }
+  .field-name {
+    font-family: "SF Mono", monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--purple);
+  }
+  .field-type {
+    font-family: "SF Mono", monospace;
+    font-size: 12px;
+    color: var(--cyan);
+    background: rgba(121,192,255,0.08);
+    padding: 1px 7px;
+    border-radius: 5px;
+    border: 1px solid rgba(121,192,255,0.2);
+  }
+  .field-opt {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-left: auto;
+    font-family: "SF Mono", monospace;
+  }
+  .field-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+  .tag-deprecated {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--yellow);
+    background: rgba(210,153,34,0.12);
+    border: 1px solid rgba(210,153,34,0.3);
+    padding: 1px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* ---------- Callout ---------- */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: rgba(88,166,255,0.06);
+    padding: 14px 18px;
+    border-radius: 0 8px 8px 0;
+    margin: 18px 0;
+    font-size: 14.5px;
+    color: #c9d1d9;
+  }
+  .callout.warn {
+    border-color: var(--yellow);
+    background: rgba(210,153,34,0.07);
+  }
+  .callout.warn strong { color: var(--yellow); }
+  .callout strong { color: var(--accent); }
+  .callout.green {
+    border-color: var(--green);
+    background: rgba(63,185,80,0.06);
+  }
+  .callout.green strong { color: var(--green); }
+
+  /* ---------- Features ---------- */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 24px 0;
+  }
+  .feature {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    background: var(--bg-elev);
+    transition: border-color .15s;
+  }
+  .feature:hover { border-color: var(--accent-dim); }
+  .feature .icon {
+    font-size: 20px; margin-bottom: 10px; display: block;
+  }
+  .feature h4 {
+    font-size: 14.5px; margin-bottom: 6px; color: var(--text);
+  }
+  .feature p {
+    font-size: 13.5px; color: var(--text-dim);
+    margin: 0; line-height: 1.6;
+  }
+
+  /* ---------- Tree visual ---------- */
+  .tree {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    font-family: "SF Mono", monospace;
+    font-size: 13.5px;
+    line-height: 1.9;
+    color: var(--text-dim);
+    overflow-x: auto;
+    margin: 16px 0;
+  }
+  .tree .node { color: var(--purple); }
+  .tree .key { color: var(--cyan); }
+  .tree .str { color: #a5d6ff; }
+  .tree .dim { color: var(--text-dim); }
+
+  /* ---------- Table ---------- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 18px 0;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  th {
+    background: var(--bg-elev);
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  tr:last-child td { border-bottom: none; }
+  td:first-child {
+    color: var(--purple);
+    font-family: "SF Mono", monospace;
+  }
+
+  /* ---------- Sub-proposal card ---------- */
+  .subproposal {
+    border: 1px solid rgba(88,166,255,0.35);
+    background: linear-gradient(135deg, rgba(88,166,255,0.06), rgba(188,140,255,0.06));
+    border-radius: 12px;
+    padding: 24px 26px;
+    margin: 24px 0;
+  }
+  .subproposal .label {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .subproposal h4 {
+    font-size: 19px;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+  .subproposal p {
+    color: var(--text-dim);
+    font-size: 14.5px;
+    margin-bottom: 12px;
+  }
+
+  /* ---------- Footer ---------- */
+  footer {
+    padding: 48px 0 64px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13.5px;
+  }
+  footer .mark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    border-radius: 7px;
+    color: #0d1117; font-weight: 800; font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  /* ---------- Principles ---------- */
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    margin-top: 24px;
+  }
+  .principle {
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-elev);
+  }
+  .principle .n {
+    font-family: "SF Mono", monospace;
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 8px;
+    display: block;
+    letter-spacing: 0.08em;
+  }
+  .principle h4 { font-size: 15px; margin-bottom: 6px; }
+  .principle p {
+    font-size: 13.5px; color: var(--text-dim);
+    margin: 0; line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap header-inner">
+    <div class="logo">
+      <span class="logo-mark">S</span>
+      <span>subject</span>
+    </div>
+    <nav>
+      <a href="#problem">问题</a>
+      <a href="#interface">接口</a>
+      <a href="#fields">字段</a>
+      <a href="#tree">树形</a>
+      <a href="#usage">用法</a>
+      <a href="#sint">sint</a>
+      <a href="#principles">原则</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<div class="hero">
+  <div class="wrap">
+    <div class="badge"><span class="dot"></span> Proposal · v1.0</div>
+    <h1>一个<span class="grad">通用对象</span>，<br>穿越所有接口。</h1>
+    <p class="lede">
+      <code>Subject</code> 是一个前后端通用的最小对象约定。
+      前端对应 TypeScript 的任意对象 <code>const item: object = {}</code>，
+      后端对应 Go 的 <code>map[string]any</code>。
+      双方只取自己需要的字段，不需要满屏的结构体与 <code>json:tag</code>。
+    </p>
+    <div class="hero-actions">
+      <a class="btn primary" href="#interface">查看接口 →</a>
+      <a class="btn" href="#usage">前后端示例</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PROBLEM ============ -->
+<section id="problem">
+  <div class="wrap">
+    <h2><span class="num">01</span> 问题：结构体泛滥与类型僵化</h2>
+    <p class="sub">
+      为了在前后端之间传递一个对象，我们写了太多只用于“翻译”的代码。
+    </p>
+
+    <div class="compare">
+      <div class="card bad">
+        <h4>✗ 传统写法</h4>
+<pre><span class="tok-com">// 后端：为每个接口定义结构体</span>
+<span class="tok-key">type</span> <span class="tok-typ">UserReq</span> <span class="tok-key">struct</span> {
+    Id   <span class="tok-typ">int64</span>  <span class="tok-str">`json:"id"`</span>
+    Name <span class="tok-typ">string</span> <span class="tok-str">`json:"name"`</span>
+    Tags []<span class="tok-typ">string</span> <span class="tok-str">`json:"tags"`</span>
+    <span class="tok-com">// ... 再加十个字段</span>
+}
+
+<span class="tok-com">// 前端：又要维护一份 interface</span>
+<span class="tok-key">interface</span> <span class="tok-typ">UserReq</span> {
+  id: <span class="tok-typ">number</span>;
+  name: <span class="tok-typ">string</span>;
+  tags: <span class="tok-typ">string</span>[];
+}
+</pre>
+      </div>
+      <div class="card good">
+        <h4>✓ Subject 约定</h4>
+<pre><span class="tok-com">// 后端：一个 map 接住所有对象</span>
+body := <span class="tok-key">map</span>[<span class="tok-typ">string</span>]<span class="tok-key">any</span>{}
+
+name, _ := body[<span class="tok-str">"name"</span>].(<span class="tok-typ">string</span>)
+tags, _ := body[<span class="tok-str">"tags"</span>].([]<span class="tok-key">any</span>)
+
+<span class="tok-com">// 前端：任意对象直接发送</span>
+<span class="tok-key">const</span> item: <span class="tok-typ">object</span> = { ... };
+</pre>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>核心洞察：</strong>
+      绝大多数接口传递的对象，本质都是“一袋键值对”。
+      给它一个统一的形状，比给每个接口单独塑形更经济。
+    </div>
+  </div>
+</section>
+
+<!-- ============ INTERFACE ============ -->
+<section id="interface">
+  <div class="wrap">
+    <h2><span class="num">02</span> Subject 接口</h2>
+    <p class="sub">
+      一份 TypeScript 定义，一份 Go 映射。所有字段都是可选的。
+    </p>
+
+    <h3>TypeScript</h3>
+<pre><span class="tok-key">interface</span> <span class="tok-typ">Subject</span> {
+  <span class="tok-com">// 数据库相关</span>
+  id<span class="tok-opt">?</span>: <span class="tok-typ">number</span>;      <span class="tok-com">// 数字 id</span>
+  _id<span class="tok-opt">?</span>: <span class="tok-typ">string</span>;     <span class="tok-com">// 字符串 id</span>
+  ztc<span class="tok-opt">?</span>: <span class="tok-typ">number</span>;     <span class="tok-com">// 创建时间戳（毫秒）</span>
+
+  <span class="tok-com">// 基础属性</span>
+  abbr<span class="tok-opt">?</span>: <span class="tok-typ">string</span>;    <span class="tok-com">// 简写名称</span>
+  kind<span class="tok-opt">?</span>: <span class="tok-typ">string</span>;    <span class="tok-com">// 所属类型</span>
+  mark<span class="tok-opt">?</span>: <span class="tok-typ">string</span>;    <span class="tok-com">// 标记符号</span>
+  name<span class="tok-opt">?</span>: <span class="tok-typ">string</span>;    <span class="tok-com">// 名称</span>
+  note<span class="tok-opt">?</span>: <span class="tok-typ">string</span>;    <span class="tok-com">// 基础备注</span>
+  more<span class="tok-opt">?</span>: <span class="tok-typ">string</span>;    <span class="tok-com">// 更详细的描述</span>
+  tags<span class="tok-opt">?</span>: <span class="tok-typ">string</span>[];  <span class="tok-com">// 多个标签</span>
+  value<span class="tok-opt">?</span>: <span class="tok-typ">number</span>;   <span class="tok-com">// 已废弃，很少使用</span>
+
+  <span class="tok-com">// 树形结构</span>
+  subs<span class="tok-opt">?</span>: <span class="tok-typ">Subject</span>[]; <span class="tok-com">// 包含的子对象数组</span>
+
+  <span class="tok-com">// 扩展属性</span>
+  sint<span class="tok-opt">?</span>: <span class="tok-typ">string</span>;    <span class="tok-com">// 字符串数字，相当于 value</span>
+  scss<span class="tok-opt">?</span>: <span class="tok-typ">string</span>;    <span class="tok-com">// 前端内联样式字符串</span>
+
+  <span class="tok-com">// 业务语义</span>
+  link<span class="tok-opt">?</span>: <span class="tok-typ">string</span>;    <span class="tok-com">// 一个网址链接</span>
+}
+</pre>
+
+    <h3>Go 对应</h3>
+<pre><span class="tok-com">// Subject 即 map[string]any</span>
+<span class="tok-key">var</span> item <span class="tok-key">map</span>[<span class="tok-typ">string</span>]<span class="tok-key">any</span>
+
+<span class="tok-com">// 或从 HTTP / DB / 配置文件中读出</span>
+body := <span class="tok-key">map</span>[<span class="tok-typ">string</span>]<span class="tok-key">any</span>{}
+_ = json.<span class="tok-fn">Unmarshal</span>(raw, &amp;body)
+</pre>
+
+    <div class="callout green">
+      <strong>映射关系：</strong>
+      TypeScript 的 <code>object</code> ↔ Go 的 <code>map[string]any</code> ↔ JSON 的 <code>{...}</code>。
+      三者是同一种东西的三种写法。
+    </div>
+  </div>
+</section>
+
+<!-- ============ FIELDS ============ -->
+<section id="fields">
+  <div class="wrap">
+    <h2><span class="num">03</span> 字段参考</h2>
+    <p class="sub">所有字段均为可选。不需要的字段不出现，解析方只取自己关心的。</p>
+
+    <!-- 数据库相关 -->
+    <div class="field-group">
+      <div class="field-group-title">数据库相关 <span class="line"></span></div>
+      <div class="fields">
+        <div class="field">
+          <div class="field-head">
+            <span class="field-name">id</span>
+            <span class="field-type">number</span>
+            <span class="field-opt">optional</span>
+          </div>
+          <div class="field-desc">数字形式的记录 id。</div>
+        </div>
+        <div class="field">
+          <div class="field-head">
+            <span class="field-name">_id</span>
+            <span class="field-type">string</span>
+            <span class="field-opt">optional</span>
+          </div>
+          <div class="field-desc">字符串形式的 id，常见于 MongoDB 或外部系统。</div>
+        </div>
+        <div class="field">
+          <div class="field-head">
+            <span class="field-name">ztc</span>
+            <span class="field-type">number</span>
+            <span class="field-opt">optional</span>
+          </div>
+          <div class="field-desc">
+            数据创建时间戳，单位毫秒。前缀 <code>z</code> 使其在排序时落在最后。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 基础属性 -->
+    <div class="field-group">
+      <div class="field-group-title">基础属性 <span class="line"></span></div>
+      <div class="fields">
+        <div class="field">
+          <div class="field-head">
+            <span class="field-name">abbr</span>
+            <span class="field-type">string</span>
+            <span class="field-opt">optional</span>
+          </div>
+          <div class="field-desc">简写名称，用于紧凑展示。</div>
+        </div>
+        <div class="field">
+          <div class="field-head">
+            <span class="field-name">kind</span>
+            <span class="field-type">string</span>
+            <span class="field-opt">optional</span>
+          </div>
+          <div class="field-desc">所属类型，用于分类或路由。</div>
+        </div>
+        <div class="field">
+          <div class="field-head">
+            <span class="field-name">mark</span>
+            <span class="field-type">string</span>
+            <span class="field-opt">optional</span>
+          </div>
+          <div class="field-desc">任何作用的标记符号，如 <code>"★"</code>、<code>"!"</code>。</div>
+        </div>
+        <div class="field">
+          <div class="field-head">
+            <span class="field-name">name</span>
+            <span class="field-type">string</span>
+            <span class="field-opt">optional</span>
+          </div>
+          <div class="field-desc">主要名称，最常用的展示字段。</div>
+        </div>
+        <div class="field">
+          <div class="field-head">
+            <span class="field-name">note</span>
+            <span class="field-type">string</span>
+            <span class="field-opt">optional</span>
+          </div>
+          <div class="field-desc">基础备注，一句话说明。</div>
+        </div>
+        <div class="field">
+          <div class="field-head">
+            <span class="field-name">more</span>
+            <span class="field-type">string</span>
+            <span class="field-opt">optional</span>
+          </div>
+          <div class="field-desc">更详细的描述，可容纳较长文本。</div>
+        </div>
+        <div class="field">
+          <div class="field-head">
+            <span class="field-name">tags</span>
+            <span class="field-type">string[]</span>
+            <span class="field-opt">optional</span>
+          </div>
+          <div class="field-desc">多个标签，用于筛选与检索。</div>
+        </div>
+        <div class="field deprecated">
+          <div class="field-head">
+            <span class="field-name">value</span>
+            <span class="field-type">number</span>
+            <span class="tag-deprecated">deprecated</span>
+          </div>
+          <div class="field-desc">
+            已废弃，很少使用。新代码请改用 <code>sint</code>。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 树形结构 -->
+    <div class="field-group">
+      <div class="field-group-title">树形结构 <span class="line"></span></div>
+      <div class="fields">
+        <div class="field">
+          <div class="field-head">
+            <span class="field-name">subs</span>
+            <span class="field-type">Subject[]</span>
+            <span class="field-opt">optional</span>
+          </div>
+          <div class="field-desc">
+            子对象数组。递归使用同一套约定，天然支持任意深度的树。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 扩展 -->
+    <div class="field-group">
+      <div class="field-group-title">扩展属性 <span class="line"></span></div>
+      <div class="fields">
+        <div class="field">
+          <div class="field-head">
+            <span class="field-name">sint</span>
+            <span class="field-type">string</span>
+            <span class="field-opt">optional</span>
+          </div>
+          <div class="field-desc">
+            字符串形式的数字，作为 <code>value</code> 的替代品。见下方子提案。
+          </div>
+        </div>
+        <div class="field">
+          <div class="field-head">
+            <span class="field-name">scss</span>
+            <span class="field-type">string</span>
+            <span class="field-opt">optional</span>
+          </div>
+          <div class="field-desc">
+            前端内联样式字符串，例如 <code>"color:red;font-weight:700"</code>。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 业务语义 -->
+    <div class="field-group">
+      <div class="field-group-title">业务语义 <span class="line"></span></div>
+      <div class="fields">
+        <div class="field">
+          <div class="field-head">
+            <span class="field-name">link</span>
+            <span class="field-type">string</span>
+            <span class="field-opt">optional</span>
+          </div>
+          <div class="field-desc">一个网址链接，语义明确，可直接渲染为超链接。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <strong>扩展原则：</strong>
+      任何新字段都应保持可选、保持语义单一。
+      如果某个字段只在极少数场景使用，不要加入核心字段，直接作为普通键值对传递即可。
+    </div>
+  </div>
+</section>
+
+<!-- ============ TREE ============ -->
+<section id="tree">
+  <div class="wrap">
+    <h2><span class="num">04</span> 树形结构</h2>
+    <p class="sub">
+      <code>subs</code> 让 Subject 天然支持任意深度的树，无需额外定义节点类型。
+    </p>
+
+    <div class="tree">
+{
+  <span class="key">"name"</span>: <span class="str">"根节点"</span>,
+  <span class="key">"kind"</span>: <span class="str">"folder"</span>,
+  <span class="key">"subs"</span>: [
+    {
+      <span class="key">"name"</span>: <span class="str">"子节点 A"</span>,
+      <span class="key">"sint"</span>: <span class="str">"1.5"</span>
+    },
+    {
+      <span class="key">"name"</span>: <span class="str">"子节点 B"</span>,
+      <span class="key">"subs"</span>: [
+        { <span class="key">"name"</span>: <span class="str">"孙节点"</span> }
+      ]
+    }
+  ]
+}
+    </div>
+
+    <p>
+      由于每一层的 <code>subs</code> 元素都是同一个 <code>Subject</code>，
+      前端和后端的遍历逻辑可以完全递归复用，不需要为每一层定义不同的类型。
+    </p>
+  </div>
+</section>
+
+<!-- ============ USAGE ============ -->
+<section id="usage">
+  <div class="wrap">
+    <h2><span class="num">05</span> 前后端用法</h2>
+    <p class="sub">各取所需，互不打扰。</p>
+
+    <h3>后端：只取自己需要的字段</h3>
+<pre><span class="tok-com">// body 来自 HTTP、数据库或配置文件</span>
+body := <span class="tok-key">map</span>[<span class="tok-typ">string</span>]<span class="tok-key">any</span>{}
+
+<span class="tok-com">// 取字符串字段</span>
+name, _ := body[<span class="tok-str">"name"</span>].(<span class="tok-typ">string</span>)
+kind, _ := body[<span class="tok-str">"kind"</span>].(<span class="tok-typ">string</span>)
+
+<span class="tok-com">// 取数字字段</span>
+id, _ := body[<span class="tok-str">"id"</span>].(<span class="tok-typ">float64</span>)
+
+<span class="tok-com">// 取字符串数字</span>
+sint, _ := body[<span class="tok-str">"sint"</span>].(<span class="tok-typ">string</span>)
+vint := utils.<span class="tok-fn">ParseStringInteger</span>(sint, <span class="tok-num">2</span>)
+
+<span class="tok-com">// 取数组</span>
+<span class="tok-key">if</span> raw, ok := body[<span class="tok-str">"tags"</span>].([]<span class="tok-key">any</span>); ok {
+    <span class="tok-key">for</span> _, t := <span class="tok-key">range</span> raw {
+        <span class="tok-key">if</span> s, ok := t.(<span class="tok-typ">string</span>); ok {
+            <span class="tok-com">// 使用 s</span>
+        }
+    }
+}
+</pre>
+
+    <div class="callout">
+      <strong>只取所需：</strong>
+      多余字段自动忽略，缺失字段返回零值。
+      不需要为每个接口定义结构体，也不需要在解析阶段做类型断言的全覆盖。
+    </div>
+
+    <h3>前端：任意对象直接发送</h3>
+<pre><span class="tok-com">// 任意对象即可作为 Subject</span>
+<span class="tok-key">const</span> item: <span class="tok-typ">object</span> = {
+  name: <span class="tok-str">"示例"</span>,
+  kind: <span class="tok-str">"demo"</span>,
+  sint: (<span class="tok-num">12.34</span>).<span class="tok-fn">toString</span>(),
+  tags: [<span class="tok-str">"a"</span>, <span class="tok-str">"b"</span>]
+};
+
+<span class="tok-com">// 直接作为请求体发送</span>
+<span class="tok-key">await</span> <span class="tok-fn">fetch</span>(<span class="tok-str">"/api/items"</span>, {
+  method: <span class="tok-str">"POST"</span>,
+  headers: { <span class="tok-str">"Content-Type"</span>: <span class="tok-str">"application/json"</span> },
+  body: JSON.<span class="tok-fn">stringify</span>(item)
+});
+</pre>
+
+    <h3>无需结构体往返</h3>
+    <div class="compare">
+      <div class="card bad">
+        <h4>✗ 结构体往返</h4>
+<pre>JSON → struct → 业务 → struct → JSON
+   ↑ 需要 tag   ↑ 需要 tag
+   ↑ 类型固定    ↑ 类型固定
+</pre>
+      </div>
+      <div class="card good">
+        <h4>✓ Subject 直通</h4>
+<pre>JSON → map → 业务 → map → JSON
+   ↑ 零结构体
+   ↑ 零 tag
+</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SINT ============ -->
+<section id="sint">
+  <div class="wrap">
+    <h2><span class="num">06</span> 子提案：sint</h2>
+    <p class="sub">Subject 的一个具体应用，用于承载带小数的数值。</p>
+
+    <div class="subproposal">
+      <span class="label">Sub-proposal · sint</span>
+      <h4>用字符串承载数值</h4>
+      <p>
+        <code>sint</code> 是 Subject 中专门用于数值传输的字段。
+        值恒为字符串形式的十进制数，后端按固定 <code>scale</code> 解析为整数。
+        它替代了已废弃的 <code>value</code> 字段，彻底规避浮点精度与类型断言问题。
+      </p>
+      <p style="margin-bottom:0">
+        <strong>完整规范：</strong>参见《sint · 字符串整数传输约定》。
+      </p>
+    </div>
+
+    <h3>为什么不用 value: number？</h3>
+    <table>
+      <thead>
+        <tr><th>方案</th><th>问题</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>value: number</td>
+          <td>Go 解析为 float64，业务层无法确定原始整数类型，精度不可控。</td>
+        </tr>
+        <tr>
+          <td>value: int64 / int32</td>
+          <td>前端 JavaScript 所有数字都是 number，无法区分。</td>
+        </tr>
+        <tr>
+          <td>value: string</td>
+          <td>格式不固定，可能是 "12"、"-12.34"、"12%"、"1e3"……无法统一解析。</td>
+        </tr>
+        <tr>
+          <td><strong>sint: string</strong></td>
+          <td><strong>格式明确、解析确定、前后端一致。</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>前端一行发送</h3>
+<pre><span class="tok-key">const</span> payload = {
+  sint: value.<span class="tok-fn">toString</span>()
+};
+<span class="tok-com">// -12.34 → { "sint": "-12.34" }</span>
+</pre>
+
+    <h3>后端一行解析</h3>
+<pre>s, _ := body[<span class="tok-str">"sint"</span>].(<span class="tok-typ">string</span>)
+v := utils.<span class="tok-fn">ParseStringInteger</span>(s, <span class="tok-num">2</span>)
+
+<span class="tok-key">if</span> v != <span class="tok-num">0</span> {
+    <span class="tok-com">// 放心作为业务数据使用</span>
+}
+</pre>
+
+    <div class="callout warn">
+      <strong>注意：</strong>
+      <code>ParseStringInteger</code> 对非法输入返回 0。
+      若接口需要严格校验，请在业务层用正则预校验原始字符串。
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRINCIPLES ============ -->
+<section id="principles">
+  <div class="wrap">
+    <h2><span class="num">07</span> 设计原则</h2>
+    <p class="sub">这套提案的取舍，可以归纳为四条。</p>
+
+    <div class="principles">
+      <div class="principle">
+        <span class="n">P1</span>
+        <h4>约定优于结构</h4>
+        <p>用一个通用对象，替代为每个接口单独塑形。类型由字段名约定，而不是由语言类型系统强制。</p>
+      </div>
+      <div class="principle">
+        <span class="n">P2</span>
+        <h4>各取所需</h4>
+        <p>发送方可以附带任意字段，接收方只读取自己关心的。多余字段自动忽略，缺失字段返回零值。</p>
+      </div>
+      <div class="principle">
+        <span class="n">P3</span>
+        <h4>输入宽松，格式明确</h4>
+        <p>接受宽泛的输入，但对关键字段（如 <code>sint</code>）给出严格的格式约定，保证解析确定性。</p>
+      </div>
+      <div class="principle">
+        <span class="n">P4</span>
+        <h4>不绑定语言</h4>
+        <p>提案只描述数据形状与处理逻辑，不依赖 Go、TypeScript 或任何具体框架。任何语言都可以实现。</p>
+      </div>
+    </div>
+
+    <h3>适用场景</h3>
+    <ul>
+      <li>快速迭代的接口，字段频繁增删。</li>
+      <li>前后端由不同团队维护，同步结构体成本高。</li>
+      <li>数据来源多样（HTTP、数据库、配置文件），难以统一为固定结构体。</li>
+      <li>树形、递归、配置类数据，天然适合用通用对象承载。</li>
+    </ul>
+
+    <h3>不适用场景</h3>
+    <ul>
+      <li>对强类型、编译期校验有硬性要求的核心业务。</li>
+      <li>需要 OpenAPI / gRPC 等强 schema 的场景。</li>
+      <li>字段数量稳定、语义固定的内部接口（结构体反而更清晰）。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <div class="mark">S</div>
+    <div>Subject · 通用对象传输提案 · v1.0</div>
+    <div style="margin-top:6px;opacity:.6">一个对象，穿越所有接口。</div>
+  </div>
+</footer>
+
+</body>
+</html>
