@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>项目启动计划 · 立项指导</title>
+<style>
+  :root {
+    --bg-deep: #06080f;
+    --bg-panel: #0b1020;
+    --bg-panel-2: #0f1630;
+    --line: rgba(80, 160, 255, 0.18);
+    --line-strong: rgba(80, 180, 255, 0.45);
+    --cyan: #38e1ff;
+    --cyan-dim: #1b8fb0;
+    --blue: #4f8cff;
+    --violet: #9a6bff;
+    --green: #3ff2a0;
+    --amber: #ffc857;
+    --pink: #ff5fa2;
+    --text: #d7e3f4;
+    --text-dim: #7d8dad;
+    --text-mute: #55627d;
+    --mono: 'SF Mono', 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    --sans: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.7;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* ===== 背景网格与光晕 ===== */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(60, 130, 220, 0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(60, 130, 220, 0.055) 1px, transparent 1px);
+    background-size: 46px 46px;
+    pointer-events: none;
+    z-index: 0;
+    mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 20%, transparent 90%);
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -30%; left: 50%;
+    width: 900px; height: 900px;
+    transform: translateX(-50%);
+    background: radial-gradient(circle, rgba(56, 225, 255, 0.10) 0%, rgba(80, 100, 255, 0.05) 35%, transparent 65%);
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(20px);
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 2;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 28px 120px;
+  }
+
+  /* ===== 顶部进度条 ===== */
+  .progress-track {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 2px;
+    background: rgba(80, 160, 255, 0.1);
+    z-index: 100;
+  }
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--cyan), var(--blue), var(--violet));
+    box-shadow: 0 0 12px rgba(56, 225, 255, 0.7);
+    transition: width 0.1s linear;
+  }
+
+  /* ===== HERO ===== */
+  .hero {
+    padding: 110px 0 70px;
+    position: relative;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    border: 1px solid var(--line-strong);
+    background: rgba(56, 225, 255, 0.06);
+    padding: 7px 15px;
+    border-radius: 100px;
+    margin-bottom: 32px;
+  }
+  .hero-tag .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 10px var(--cyan);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  .hero h1 {
+    font-size: clamp(38px, 6vw, 66px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 24px;
+    background: linear-gradient(120deg, #ffffff 0%, #9fd7ff 45%, #8f9bff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero p.lede {
+    font-size: 18px;
+    color: var(--text-dim);
+    max-width: 680px;
+    margin-bottom: 40px;
+  }
+  .hero p.lede strong { color: var(--cyan); font-weight: 600; }
+
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .hero-meta span {
+    color: var(--text-mute);
+    border: 1px solid var(--line);
+    padding: 6px 13px;
+    border-radius: 6px;
+    background: rgba(12, 20, 40, 0.6);
+  }
+  .hero-meta span b { color: var(--green); font-weight: 500; }
+
+  /* ===== 流程导航 ===== */
+  .nav-flow {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin: 10px 0 80px;
+  }
+  .nav-flow a {
+    position: relative;
+    display: block;
+    text-decoration: none;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(18, 28, 52, 0.7), rgba(10, 16, 32, 0.7));
+    border-radius: 10px;
+    padding: 16px 14px;
+    transition: all 0.25s ease;
+    overflow: hidden;
+  }
+  .nav-flow a::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, var(--cyan), transparent);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .nav-flow a:hover {
+    border-color: var(--line-strong);
+    transform: translateY(-3px);
+    background: linear-gradient(180deg, rgba(24, 40, 74, 0.9), rgba(12, 20, 40, 0.9));
+    box-shadow: 0 10px 30px -10px rgba(56, 225, 255, 0.35);
+  }
+  .nav-flow a:hover::before { opacity: 1; }
+  .nav-flow .num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--cyan);
+    letter-spacing: 0.1em;
+  }
+  .nav-flow .name {
+    font-size: 13px;
+    color: var(--text);
+    margin-top: 5px;
+    font-weight: 500;
+  }
+
+  /* ===== 章节 ===== */
+  section { margin-bottom: 96px; scroll-margin-top: 40px; }
+
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+    margin-bottom: 12px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .sec-index {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--cyan);
+    letter-spacing: 0.1em;
+    flex-shrink: 0;
+    padding-top: 4px;
+  }
+  .sec-head h2 {
+    font-size: clamp(24px, 3.4vw, 34px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #eaf3ff;
+  }
+  .sec-head h2 em {
+    font-style: normal;
+    color: var(--text-mute);
+    font-weight: 400;
+    font-size: 0.55em;
+    margin-left: 12px;
+    font-family: var(--mono);
+    letter-spacing: 0.05em;
+  }
+
+  .sec-desc {
+    color: var(--text-dim);
+    font-size: 15px;
+    max-width: 780px;
+    margin-bottom: 36px;
+    padding-left: 44px;
+  }
+
+  /* ===== 卡片 ===== */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+  .card {
+    position: relative;
+    background: linear-gradient(160deg, rgba(16, 26, 48, 0.85), rgba(9, 14, 28, 0.85));
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 26px 26px 24px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+  .card::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 60px; height: 60px;
+    background: linear-gradient(225deg, rgba(56, 225, 255, 0.12), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .card:hover {
+    border-color: var(--line-strong);
+    box-shadow: 0 18px 40px -20px rgba(56, 225, 255, 0.4);
+  }
+  .card:hover::after { opacity: 1; }
+
+  .card .corner {
+    position: absolute;
+    top: 12px; right: 12px;
+    width: 14px; height: 14px;
+    border-top: 1.5px solid var(--line-strong);
+    border-right: 1.5px solid var(--line-strong);
+    opacity: 0.6;
+  }
+
+  .card h3 {
+    font-size: 17px;
+    font-weight: 650;
+    margin-bottom: 12px;
+    color: #eaf3ff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card h3 .ico {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    flex-shrink: 0;
+    font-family: var(--mono);
+    background: rgba(56, 225, 255, 0.1);
+    color: var(--cyan);
+    border: 1px solid rgba(56, 225, 255, 0.25);
+  }
+  .card.violet h3 .ico { background: rgba(154, 107, 255, 0.12); color: var(--violet); border-color: rgba(154, 107, 255, 0.3); }
+  .card.green h3 .ico { background: rgba(63, 242, 160, 0.1); color: var(--green); border-color: rgba(63, 242, 160, 0.28); }
+  .card.amber h3 .ico { background: rgba(255, 200, 87, 0.1); color: var(--amber); border-color: rgba(255, 200, 87, 0.3); }
+  .card.pink h3 .ico { background: rgba(255, 95, 162, 0.1); color: var(--pink); border-color: rgba(255, 95, 162, 0.3); }
+
+  .card p { font-size: 14px; color: var(--text-dim); margin-bottom: 8px; }
+  .card p:last-child { margin-bottom: 0; }
+  .card strong { color: var(--text); font-weight: 600; }
+  .card code {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: rgba(56, 225, 255, 0.08);
+    color: var(--cyan);
+    padding: 1px 7px;
+    border-radius: 5px;
+    border: 1px solid rgba(56, 225, 255, 0.15);
+  }
+
+  /* 动机对比 */
+  .motiv-wrap {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 20px;
+  }
+  .motiv-big {
+    border-left: 2px solid var(--violet);
+  }
+  .motiv-small {
+    border-left: 2px solid var(--cyan);
+  }
+  .motiv-wrap .card { padding-left: 28px; }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .chip {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 5px;
+    border: 1px solid var(--line);
+    color: var(--text-mute);
+    background: rgba(10, 16, 30, 0.7);
+  }
+  .chip.on { color: var(--cyan); border-color: rgba(56, 225, 255, 0.35); background: rgba(56, 225, 255, 0.06); }
+
+  /* ===== 决策路径图 ===== */
+  .decision {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .node {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 20px;
+    position: relative;
+    padding-bottom: 30px;
+  }
+  .node:last-child { padding-bottom: 0; }
+  .node::before {
+    content: '';
+    position: absolute;
+    left: 27px;
+    top: 56px;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, var(--line-strong), rgba(80, 160, 255, 0.05));
+  }
+  .node:last-child::before { display: none; }
+  .node-mark {
+    width: 56px; height: 56px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    border: 1px solid var(--line-strong);
+    background: linear-gradient(160deg, rgba(24, 40, 74, 0.9), rgba(10, 16, 32, 0.9));
+    color: var(--cyan);
+    z-index: 1;
+    flex-shrink: 0;
+  }
+  .node-mark.v { color: var(--violet); border-color: rgba(154, 107, 255, 0.4); }
+  .node-mark.g { color: var(--green); border-color: rgba(63, 242, 160, 0.4); }
+  .node-mark.a { color: var(--amber); border-color: rgba(255, 200, 87, 0.4); }
+  .node-mark.p { color: var(--pink); border-color: rgba(255, 95, 162, 0.4); }
+
+  .node-body { padding-top: 6px; }
+  .node-body h4 {
+    font-size: 16px;
+    font-weight: 650;
+    color: #eaf3ff;
+    margin-bottom: 8px;
+  }
+  .node-body p { font-size: 14px; color: var(--text-dim); }
+  .node-body .sub {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-mute);
+    font-family: var(--mono);
+    border-left: 2px solid var(--line);
+    padding-left: 14px;
+  }
+
+  /* 分支对比 */
+  .branch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 14px;
+  }
+  .branch-item {
+    border: 1px dashed var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+    background: rgba(10, 16, 30, 0.5);
+  }
+  .branch-item h5 {
+    font-size: 13px;
+    font-family: var(--mono);
+    margin-bottom: 8px;
+    letter-spacing: 0.03em;
+  }
+  .branch-item.yes h5 { color: var(--green); }
+  .branch-item.no h5 { color: var(--amber); }
+  .branch-item p { font-size: 13px; color: var(--text-dim); }
+
+  /* ===== 执行方案 ===== */
+  .exec-list { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+  .exec-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    gap: 20px;
+    background: linear-gradient(120deg, rgba(16, 26, 48, 0.8), rgba(9, 14, 28, 0.8));
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px 24px;
+    transition: all 0.25s;
+  }
+  .exec-item:hover {
+    border-color: var(--line-strong);
+    transform: translateX(4px);
+  }
+  .exec-item .idx {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--cyan);
+    min-width: 44px;
+    padding-top: 2px;
+    letter-spacing: -0.02em;
+  }
+  .exec-item h4 { font-size: 15.5px; font-weight: 650; color: #eaf3ff; margin-bottom: 6px; }
+  .exec-item p { font-size: 13.5px; color: var(--text-dim); }
+  .exec-item .tag {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    padding: 4px 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+    border: 1px solid var(--line);
+    color: var(--text-mute);
+    align-self: center;
+  }
+  .tag.must { color: var(--pink); border-color: rgba(255, 95, 162, 0.35); background: rgba(255, 95, 162, 0.06); }
+  .tag.opt { color: var(--text-mute); }
+
+  /* ===== 功能概要 ===== */
+  .feat-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    font-size: 13.5px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .feat-table thead th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    padding: 14px 20px;
+    background: rgba(56, 225, 255, 0.05);
+    border-bottom: 1px solid var(--line);
+    font-weight: 500;
+  }
+  .feat-table td {
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(80, 160, 255, 0.08);
+    color: var(--text-dim);
+    vertical-align: top;
+  }
+  .feat-table tr:last-child td { border-bottom: none; }
+  .feat-table tr:hover td { background: rgba(56, 225, 255, 0.025); }
+  .feat-table td:first-child {
+    color: var(--text);
+    font-weight: 500;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+
+  /* ===== 交付物 ===== */
+  .deliver-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 8px;
+  }
+  .deliver {
+    display: flex;
+    gap: 16px;
+    padding: 22px 24px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: linear-gradient(150deg, rgba(16, 26, 48, 0.8), rgba(9, 14, 28, 0.8));
+    transition: all 0.28s;
+  }
+  .deliver:hover {
+    border-color: var(--line-strong);
+    box-shadow: 0 16px 36px -20px rgba(56, 225, 255, 0.45);
+  }
+  .deliver .d-ico {
+    width: 42px; height: 42px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    border: 1px solid var(--line);
+    background: rgba(56, 225, 255, 0.06);
+  }
+  .deliver h4 { font-size: 15px; font-weight: 650; color: #eaf3ff; margin-bottom: 6px; }
+  .deliver p { font-size: 13px; color: var(--text-dim); }
+  .deliver .d-ico.g { background: rgba(63, 242, 160, 0.07); border-color: rgba(63, 242, 160, 0.25); }
+  .deliver .d-ico.v { background: rgba(154, 107, 255, 0.07); border-color: rgba(154, 107, 255, 0.25); }
+  .deliver .d-ico.a { background: rgba(255, 200, 87, 0.07); border-color: rgba(255, 200, 87, 0.25); }
+  .deliver .d-ico.p { background: rgba(255, 95, 162, 0.07); border-color: rgba(255, 95, 162, 0.25); }
+
+  /* ===== 备注条 ===== */
+  .note {
+    margin-top: 26px;
+    border: 1px dashed rgba(255, 200, 87, 0.35);
+    background: rgba(255, 200, 87, 0.04);
+    border-radius: 12px;
+    padding: 18px 22px;
+    font-size: 13.5px;
+    color: var(--text-dim);
+    display: flex;
+    gap: 14px;
+  }
+  .note .n-ico { color: var(--amber); font-family: var(--mono); flex-shrink: 0; font-size: 15px; }
+  .note strong { color: var(--amber); font-weight: 600; }
+
+  /* ===== 收尾 ===== */
+  .closing {
+    margin-top: 40px;
+    text-align: center;
+    border-top: 1px solid var(--line);
+    padding-top: 50px;
+  }
+  .closing .quote {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text-dim);
+    max-width: 620px;
+    margin: 0 auto 18px;
+    line-height: 1.9;
+  }
+  .closing .quote b { color: var(--cyan); font-weight: 500; }
+  .closing .sig {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--text-mute);
+    text-transform: uppercase;
+  }
+
+  /* ===== 动画进入 ===== */
+  .reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* ===== 响应式 ===== */
+  @media (max-width: 860px) {
+    .nav-flow { grid-template-columns: repeat(2, 1fr); }
+    .grid-2, .grid-3, .motiv-wrap, .branch, .deliver-grid { grid-template-columns: 1fr; }
+    .sec-desc { padding-left: 0; }
+    .exec-item { grid-template-columns: auto 1fr; }
+    .exec-item .tag { grid-column: 2; justify-self: start; }
+    .feat-table { display: block; overflow-x: auto; white-space: nowrap; }
+  }
+  @media (max-width: 520px) {
+    .wrap { padding: 0 18px 80px; }
+    .hero { padding: 70px 0 40px; }
+    .nav-flow { grid-template-columns: 1fr; }
+    .node { grid-template-columns: 44px 1fr; gap: 14px; }
+    .node-mark { width: 44px; height: 44px; font-size: 13px; }
+    .node::before { left: 21px; top: 44px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+
+<div class="wrap">
+
+  <!-- ============ HERO ============ -->
+  <header class="hero">
+    <div class="hero-tag"><span class="dot"></span> PROJECT INITIATION PROTOCOL</div>
+    <h1>项目启动计划<br>立项指导</h1>
+    <p class="lede">
+      在写下第一行代码之前，先理清 <strong>为什么做</strong>、<strong>能不能做</strong>、<strong>怎么做</strong>、<strong>做完交什么</strong>。
+      这套流程用于把一个模糊的想法，收敛成可执行、可验证、可交付的工程任务。
+    </p>
+    <div class="hero-meta">
+      <span>阶段 <b>5</b></span>
+      <span>关键决策点 <b>2</b></span>
+      <span>交付物 <b>4 类</b></span>
+      <span>原则 <b>先探路 · 后压缩 · 再交付</b></span>
+    </div>
+  </header>
+
+  <!-- ============ 流程导航 ============ -->
+  <nav class="nav-flow reveal">
+    <a href="#motivation"><div class="num">01</div><div class="name">动机定义</div></a>
+    <a href="#solution"><div class="num">02</div><div class="name">方案探索</div></a>
+    <a href="#execution"><div class="num">03</div><div class="name">执行方案</div></a>
+    <a href="#demo"><div class="num">04</div><div class="name">演示案例</div></a>
+    <a href="#delivery"><div class="num">05</div><div class="name">交付标准</div></a>
+  </nav>
+
+  <!-- ============ 01 动机 ============ -->
+  <section id="motivation" class="reveal">
+    <div class="sec-head">
+      <div class="sec-index">01 / MOTIVATION</div>
+      <h2>动机定义 <em>大动机 & 小动机</em></h2>
+    </div>
+    <p class="sec-desc">
+      任何项目启动前，必须同时回答两个问题：它解决的<strong>具体场景</strong>是什么，以及它是否有机会成为<strong>通用方案</strong>。
+      两者缺一不可——只有小动机容易做成一次性脚本，只有大动机容易悬空落不了地。
+    </p>
+
+    <div class="motiv-wrap">
+      <div class="card motiv-big">
+        <span class="corner"></span>
+        <h3><span class="ico">A</span>大动机 · 可泛化的命题</h3>
+        <p>项目完成后，<strong>有机会被抽象为公开的开源提案</strong>，适配更多类似场景。</p>
+        <p>它回答的是：<em>“这件事解决好了，能推广到哪一类问题上？”</em></p>
+        <p>大动机决定了项目的<strong>抽象层级、接口设计、可扩展性</strong>——它不要求一开始就通用，但要求方案不被单一场景绑死。</p>
+        <div class="chip-row">
+          <span class="chip on">可开源</span>
+          <span class="chip on">可复用</span>
+          <span class="chip">抽象接口</span>
+          <span class="chip">适配多场景</span>
+        </div>
+      </div>
+
+      <div class="card motiv-small">
+        <span class="corner"></span>
+        <h3><span class="ico">B</span>小动机 · 具体的应用场景</h3>
+        <p>本质就是<strong>实际遇到的某个具体问题</strong>——一个真实存在的、可被描述的场景。</p>
+        <p>它回答的是：<em>“谁，在什么情况下，遇到了什么麻烦？”</em></p>
+        <p>小动机必须<strong>作为案例背景写入项目文档</strong>，它是验证大动机是否成立的第一个样本，也是后期演示的天然素材。</p>
+        <div class="chip-row">
+          <span class="chip on">真实场景</span>
+          <span class="chip on">写入文档</span>
+          <span class="chip">案例背景</span>
+          <span class="chip">首个验证样本</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <span class="n-ico">▸</span>
+      <div><strong>立项检查：</strong>如果只能写出小动机而写不出大动机，说明这个项目更适合作为任务直接执行；如果只能写出大动机而找不到具体场景，说明还停留在设想阶段，需要先补一个真实案例再启动。</div>
+    </div>
+  </section>
+
+  <!-- ============ 02 方案探索 ============ -->
+  <section id="solution" class="reveal">
+    <div class="sec-head">
+      <div class="sec-index">02 / SOLUTION</div>
+      <h2>方案探索 <em>试探 → 反馈 → 收敛</em></h2>
+    </div>
+    <p class="sec-desc">
+      在确定技术路线之前，需要<strong>试探性地尝试不同技术方案</strong>，并对每个方案给出大致反馈：预测结果、列出利弊。
+      这一步不能省——除非项目本身已经非常明确，那就直接塌陷成一个任务。
+    </p>
+
+    <div class="decision">
+      <div class="node">
+        <div class="node-mark">01</div>
+        <div class="node-body">
+          <h4>枚举候选方案</h4>
+          <p>针对同一目标，列出至少 2–3 条技术路线。哪怕其中某条明显不靠谱，也先写下来——排除过程本身有价值。</p>
+          <div class="sub">output: 方案清单 + 每条的核心假设</div>
+        </div>
+      </div>
+
+      <div class="node">
+        <div class="node-mark v">02</div>
+        <div class="node-body">
+          <h4>试探性验证（Spike）</h4>
+          <p>用最小成本跑通关键路径，获取真实反馈。不做完整实现，只验证“这条路走不走得通”。</p>
+          <div class="sub">output: 可行性结论 + 关键卡点 + 未知风险</div>
+        </div>
+      </div>
+
+      <div class="node">
+        <div class="node-mark a">03</div>
+        <div class="node-body">
+          <h4>预测结果与利弊评估</h4>
+          <p>对每个方案给出预判：预期效果、实现成本、维护复杂度、可扩展性、与现有系统的耦合度。</p>
+          <div class="sub">output: 对比矩阵（收益 / 成本 / 风险 / 可逆性）</div>
+        </div>
+      </div>
+
+      <div class="node">
+        <div class="node-mark g">04</div>
+        <div class="node-body">
+          <h4>判定：技术路线是否明确？</h4>
+          <p>这是整个流程的关键分叉点。</p>
+          <div class="branch">
+            <div class="branch-item yes">
+              <h5>▸ 明确 → 任务化</h5>
+              <p>技术路线已确定，项目<strong>塌陷为可执行的工作任务</strong>，直接进入执行方案，无需再探索。</p>
+            </div>
+            <div class="branch-item no">
+              <h5>▸ 不明确 → 继续探路</h5>
+              <p>存在多个可行方案或关键未知，需要先做更多验证，再回到决策点。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="node">
+        <div class="node-mark p">05</div>
+        <div class="node-body">
+          <h4>锁定技术路线</h4>
+          <p>确定唯一主线，并记录被放弃的方案及其放弃理由。这份记录是后续复盘与开源提案的重要材料。</p>
+          <div class="sub">output: 技术路线决策记录（ADR）</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <span class="n-ico">▸</span>
+      <div><strong>核心判断：</strong><code>确定好技术方案的项目 = 可执行的工作任务</code>。这个等式把“项目”与“任务”区分开——项目的本质是<strong>不确定性</strong>，任务的本质是<strong>确定性执行</strong>。当不确定性被消除，项目就退化为任务，可以直接排期。</div>
+    </div>
+  </section>
+
+  <!-- ============ 03 执行方案 ============ -->
+  <section id="execution" class="reveal">
+    <div class="sec-head">
+      <div class="sec-index">03 / EXECUTION</div>
+      <h2>执行方案 <em>压缩环节 · 明细置顶</em></h2>
+    </div>
+    <p class="sec-desc">
+      技术路线确定后，执行方案要求<strong>尽可能明细、尽可能压缩</strong>。
+      环节越多，出问题的概率越大——每多一个环节，就多一次交接、多一处理解偏差、多一个失败点。
+    </p>
+
+    <div class="exec-list">
+      <div class="exec-item">
+        <div class="idx">01</div>
+        <div>
+          <h4>压缩环节</h4>
+          <p>合并可以合并的步骤，消除不必要的中间产物。目标是用最短的链路从输入到达输出。</p>
+        </div>
+        <span class="tag must">必须</span>
+      </div>
+
+      <div class="exec-item">
+        <div class="idx">02</div>
+        <div>
+          <h4>置顶明细</h4>
+          <p>把最关键的步骤、依赖、约束放在方案最前面。执行者第一眼看到的就是最重要的信息。</p>
+        </div>
+        <span class="tag must">必须</span>
+      </div>
+
+      <div class="exec-item">
+        <div class="idx">03</div>
+        <div>
+          <h4>功能概要</h4>
+          <p>每个功能具体干什么、预期效果是什么。不写实现细节，只写行为契约与验收标准。</p>
+        </div>
+        <span class="tag must">必须</span>
+      </div>
+
+      <div class="exec-item">
+        <div class="idx">04</div>
+        <div>
+          <h4>依赖与前置条件</h4>
+          <p>明确执行前必须就绪的资源、环境、权限、数据。前置不清，执行必卡。</p>
+        </div>
+        <span class="tag must">必须</span>
+      </div>
+
+      <div class="exec-item">
+        <div class="idx">05</div>
+        <div>
+          <h4>风险与回退</h4>
+          <p>列出可能导致失败的关键点，以及每个点的回退策略。可逆性是执行方案的安全底线。</p>
+        </div>
+        <span class="tag must">必须</span>
+      </div>
+    </div>
+
+    <h3 style="font-size:16px; margin:40px 0 6px; color:#eaf3ff; font-weight:650;">功能概要表 <span style="font-family:var(--mono); font-size:12px; color:var(--text-mute); font-weight:400;">/ 示例结构</span></h3>
+    <p style="font-size:13.5px; color:var(--text-dim); margin-bottom:18px;">每个功能一行，描述行为与预期效果，作为后续验收的依据。</p>
+
+    <table class="feat-table">
+      <thead>
+        <tr>
+          <th>功能</th>
+          <th>具体做什么</th>
+          <th>预期效果</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>功能 A</td>
+          <td>描述该功能的核心行为与输入输出</td>
+          <td>可观察、可验证的结果状态</td>
+        </tr>
+        <tr>
+          <td>功能 B</td>
+          <td>描述该功能的核心行为与输入输出</td>
+          <td>可观察、可验证的结果状态</td>
+        </tr>
+        <tr>
+          <td>功能 C</td>
+          <td>描述该功能的核心行为与输入输出</td>
+          <td>可观察、可验证的结果状态</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============ 04 演示案例 ============ -->
+  <section id="demo" class="reveal">
+    <div class="sec-head">
+      <div class="sec-index">04 / DEMO</div>
+      <h2>快速演示案例 <em>可选 · 但强烈建议</em></h2>
+    </div>
+    <p class="sec-desc">
+      有的项目需要一个快速的演示案例。它不是最终交付物，而是<strong>设计工具</strong>——用最小的可运行形态，验证方向、暴露问题、对齐预期。
+    </p>
+
+    <div class="grid-3">
+      <div class="card green">
+        <span class="corner"></span>
+        <h3><span class="ico">01</span>验证方向</h3>
+        <p>在投入完整实现之前，先用演示案例确认技术路线在实际运行中的表现是否符合预期。</p>
+      </div>
+      <div class="card green">
+        <span class="corner"></span>
+        <h3><span class="ico">02</span>暴露问题</h3>
+        <p>很多问题只在真实运行时才浮现。演示案例是成本最低的“踩坑”方式。</p>
+      </div>
+      <div class="card green">
+        <span class="corner"></span>
+        <h3><span class="ico">03</span>辅助设计</h3>
+        <p>有了可运行的参照，后期的实现过程可以被更好地设计——接口、数据结构、交互流程都会更具体。</p>
+      </div>
+    </div>
+
+    <div class="note">
+      <span class="n-ico">▸</span>
+      <div><strong>可选性说明：</strong>演示案例不是每个项目都必需。如果技术路线已经足够明确、实现路径没有未知，可以跳过。但只要存在不确定性，演示案例就是性价比最高的一步。</div>
+    </div>
+  </section>
+
+  <!-- ============ 05 交付标准 ============ -->
+  <section id="delivery" class="reveal">
+    <div class="sec-head">
+      <div class="sec-index">05 / DELIVERY</div>
+      <h2>交付标准 <em>不止一份测试报告</em></h2>
+    </div>
+    <p class="sec-desc">
+      项目完成后，交付的不止是一个功能测试报告。一个可被他人接手、复用、推广的项目，需要完整的技术文档体系。
+    </p>
+
+    <div class="deliver-grid">
+      <div class="deliver">
+        <div class="d-ico">📘</div>
+        <div>
+          <h4>操作手册</h4>
+          <p>面向使用者。说明如何安装、配置、运行、排错。目标是让一个没参与项目的人也能独立用起来。</p>
+        </div>
+      </div>
+
+      <div class="deliver">
+        <div class="d-ico v">🏗</div>
+        <div>
+          <h4>架构设计</h4>
+          <p>面向维护者。说明系统由哪些部分组成、如何协作、关键取舍是什么、边界在哪里。</p>
+        </div>
+      </div>
+
+      <div class="deliver">
+        <div class="d-ico a">📐</div>
+        <div>
+          <h4>技术规格明细</h4>
+          <p>即 Specifications。接口定义、数据结构、参数约束、错误码、性能指标等精确描述。</p>
+        </div>
+      </div>
+
+      <div class="deliver">
+        <div class="d-ico p">✅</div>
+        <div>
+          <h4>功能测试报告</h4>
+          <p>面向验收。记录测试范围、用例、结果与已知问题。它是交付的一部分，但不是全部。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <span class="n-ico">▸</span>
+      <div><strong>交付判断：</strong>如果大动机指向开源提案，那么操作手册、架构设计与技术规格明细就是提案的<strong>核心材料</strong>——它们决定了别人能否理解、复用并推广这个方案。</div>
+    </div>
+  </section>
+
+  <!-- ============ 收尾 ============ -->
+  <div class="closing reveal">
+    <p class="quote">
+      先问 <b>为什么</b>，再探 <b>能不能</b>，<br>
+      然后压缩成 <b>怎么做</b>，最后交付 <b>怎么用</b>。
+    </p>
+    <p class="sig">— PROJECT INITIATION PLAN —</p>
+  </div>
+
+</div>
+
+<script>
+  // 滚动进度条
+  const bar = document.getElementById('progressBar');
+  window.addEventListener('scroll', () => {
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    const p = h > 0 ? (window.scrollY / h) * 100 : 0;
+    bar.style.width = p + '%';
+  }, { passive: true });
+
+  // 进入动画
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // 导航平滑滚动（考虑固定偏移）
+  document.querySelectorAll('.nav-flow a').forEach(a => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) {
+        const y = target.getBoundingClientRect().top + window.scrollY - 20;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
