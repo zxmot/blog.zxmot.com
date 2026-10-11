@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>作坊式开发的全生命周期 · 关键节点手册</title>
+<style>
+  :root{
+    --bg:#0b0d10;
+    --panel:#14181d;
+    --panel-2:#1a1f26;
+    --border:#232a31;
+    --text:#e8eaed;
+    --muted:#9aa4af;
+    --good:#4ade80;
+    --bad:#f87171;
+    --accent:#fbbf24;
+    --accent-soft:rgba(251,191,36,.12);
+    --good-soft:rgba(74,222,128,.08);
+    --bad-soft:rgba(248,113,113,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  code,pre,.mono{font-family:"SF Mono",Menlo,Consolas,"Liberation Mono",monospace}
+
+  /* ============ 顶部导航 ============ */
+  .topnav{
+    position:sticky;top:0;z-index:100;
+    background:rgba(11,13,16,.85);
+    backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--border);
+  }
+  .nav-inner{
+    max-width:1100px;margin:0 auto;
+    display:flex;align-items:center;gap:16px;
+    padding:10px 20px;
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+  .nav-inner::-webkit-scrollbar{display:none}
+  .nav-brand{
+    font-size:13px;font-weight:600;color:var(--accent);
+    white-space:nowrap;letter-spacing:.5px;
+  }
+  .nav-links{display:flex;gap:4px;white-space:nowrap}
+  .nav-links a{
+    font-size:12px;color:var(--muted);text-decoration:none;
+    padding:5px 9px;border-radius:6px;transition:.15s;
+  }
+  .nav-links a:hover{color:var(--text);background:var(--panel-2)}
+  .nav-links a.active{color:var(--accent);background:var(--accent-soft)}
+
+  /* ============ 通用 ============ */
+  .wrap{max-width:900px;margin:0 auto;padding:0 20px}
+  section{scroll-margin-top:70px}
+
+  /* ============ Hero ============ */
+  .hero{
+    padding:80px 0 50px;
+    text-align:center;
+    border-bottom:1px solid var(--border);
+  }
+  .hero h1{
+    font-size:clamp(26px,5vw,40px);
+    font-weight:700;letter-spacing:-.5px;
+    margin-bottom:16px;
+  }
+  .hero h1 em{
+    font-style:normal;color:var(--accent);
+  }
+  .hero p{
+    color:var(--muted);font-size:15px;max-width:620px;margin:0 auto 8px;
+  }
+  .hero .tag{
+    display:inline-block;margin-top:20px;
+    font-size:12px;color:var(--muted);
+    border:1px solid var(--border);border-radius:20px;
+    padding:4px 14px;
+  }
+
+  /* ============ 反常识引言 ============ */
+  .intro{padding:60px 0 20px}
+  .intro h2{
+    font-size:13px;color:var(--muted);font-weight:600;
+    letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;
+  }
+  .stages-known{
+    display:flex;flex-wrap:wrap;gap:10px;margin-bottom:32px;
+  }
+  .stages-known span{
+    font-size:13px;color:var(--muted);
+    background:var(--panel);border:1px solid var(--border);
+    padding:8px 16px;border-radius:8px;
+    position:relative;
+  }
+  .stages-known span::after{
+    content:"→";position:absolute;right:-14px;top:50%;
+    transform:translateY(-50%);color:var(--border);
+  }
+  .stages-known span:last-child::after{display:none}
+
+  .intro-quote{
+    background:var(--panel);border-left:3px solid var(--accent);
+    padding:20px 24px;border-radius:0 10px 10px 0;
+    color:var(--text);font-size:15px;
+  }
+  .intro-quote strong{color:var(--accent)}
+
+  .stages-real{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:8px;margin-top:24px;
+  }
+  .stages-real a{
+    display:flex;align-items:center;gap:8px;
+    font-size:13px;color:var(--text);text-decoration:none;
+    background:var(--panel-2);border:1px solid var(--border);
+    padding:10px 14px;border-radius:8px;transition:.15s;
+  }
+  .stages-real a:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .stages-real a b{
+    color:var(--accent);font-size:11px;font-weight:600;
+    font-family:"SF Mono",Menlo,monospace;
+  }
+
+  /* ============ 阶段卡片 ============ */
+  .stage{
+    padding:56px 0;
+    border-top:1px solid var(--border);
+  }
+  .stage-head{
+    display:flex;align-items:flex-start;gap:18px;margin-bottom:24px;
+  }
+  .stage-num{
+    font-family:"SF Mono",Menlo,monospace;
+    font-size:14px;font-weight:700;color:var(--accent);
+    background:var(--accent-soft);
+    border:1px solid rgba(251,191,36,.25);
+    border-radius:8px;
+    padding:4px 10px;
+    flex-shrink:0;
+    margin-top:3px;
+  }
+  .stage-head h3{
+    font-size:clamp(20px,3.5vw,26px);
+    font-weight:700;letter-spacing:-.3px;
+  }
+  .stage-sub{
+    color:var(--muted);font-size:14px;margin-top:4px;
+  }
+
+  .stage-key{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:20px 22px;
+    margin-bottom:20px;
+  }
+  .stage-key .label{
+    font-size:11px;font-weight:700;letter-spacing:1.5px;
+    color:var(--accent);text-transform:uppercase;
+    display:block;margin-bottom:8px;
+  }
+  .stage-key p{font-size:15px;color:#cfd6dd}
+
+  /* 对比网格 */
+  .outcome-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:14px;
+    margin-bottom:20px;
+  }
+  @media(max-width:700px){.outcome-grid{grid-template-columns:1fr}}
+
+  .outcome{
+    border-radius:12px;padding:20px 22px;
+    border:1px solid var(--border);
+  }
+  .outcome.good{background:var(--good-soft);border-color:rgba(74,222,128,.22)}
+  .outcome.bad{background:var(--bad-soft);border-color:rgba(248,113,113,.22)}
+  .outcome h4{
+    font-size:13px;font-weight:700;margin-bottom:12px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .outcome.good h4{color:var(--good)}
+  .outcome.bad h4{color:var(--bad)}
+  .outcome ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+  .outcome li{
+    font-size:14px;color:#c4ccd4;padding-left:16px;position:relative;
+  }
+  .outcome li::before{
+    content:"";position:absolute;left:0;top:.6em;
+    width:5px;height:5px;border-radius:50%;
+  }
+  .outcome.good li::before{background:var(--good);opacity:.6}
+  .outcome.bad li::before{background:var(--bad);opacity:.6}
+
+  /* 死亡标签 */
+  .death{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:13px;color:var(--bad);
+    background:var(--bad-soft);
+    border:1px solid rgba(248,113,113,.2);
+    border-radius:8px;
+    padding:8px 14px;margin-bottom:20px;
+  }
+  .death b{font-weight:600}
+  .death .skull{font-size:14px}
+
+  /* 行动 */
+  .action{
+    display:flex;align-items:flex-start;gap:12px;
+    background:var(--panel-2);
+    border:1px dashed var(--border);
+    border-radius:10px;
+    padding:14px 18px;
+  }
+  .action .label{
+    font-size:11px;font-weight:700;letter-spacing:1px;
+    color:var(--muted);text-transform:uppercase;
+    flex-shrink:0;margin-top:3px;
+  }
+  .action p{font-size:14px;color:#cfd6dd}
+  .action code{
+    background:rgba(251,191,36,.1);color:var(--accent);
+    padding:1px 6px;border-radius:4px;font-size:13px;
+  }
+
+  /* ============ 决策门 ============ */
+  .gates{
+    padding:60px 0;
+    border-top:1px solid var(--border);
+  }
+  .gates h2{
+    font-size:clamp(22px,4vw,28px);font-weight:700;margin-bottom:8px;
+  }
+  .gates .desc{color:var(--muted);font-size:14px;margin-bottom:28px}
+
+  .gate-table{
+    width:100%;border-collapse:separate;border-spacing:0;
+    border:1px solid var(--border);border-radius:12px;
+    overflow:hidden;font-size:14px;
+  }
+  .gate-table th{
+    background:var(--panel-2);color:var(--accent);
+    font-size:11px;font-weight:700;letter-spacing:1px;
+    text-transform:uppercase;
+    padding:14px 16px;text-align:left;
+    border-bottom:1px solid var(--border);
+  }
+  .gate-table td{
+    padding:14px 16px;border-bottom:1px solid var(--border);
+    color:#c4ccd4;vertical-align:top;
+  }
+  .gate-table tr:last-child td{border-bottom:none}
+  .gate-table td:first-child{
+    color:var(--text);font-weight:600;white-space:nowrap;
+  }
+  .gate-table td strong{color:var(--good);font-weight:600}
+  .gate-table td em{color:var(--bad);font-style:normal}
+
+  /* ============ 结尾 ============ */
+  .final{
+    padding:60px 0 100px;
+    border-top:1px solid var(--border);
+    text-align:center;
+  }
+  .final h2{
+    font-size:clamp(22px,4vw,30px);font-weight:700;margin-bottom:20px;
+  }
+  .final h2 em{font-style:normal;color:var(--accent)}
+  .final p{
+    color:var(--muted);font-size:15px;max-width:620px;margin:0 auto 12px;
+  }
+  .final .loop{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:8px;
+    margin-top:32px;
+  }
+  .final .loop span{
+    font-size:13px;color:var(--text);
+    background:var(--panel);border:1px solid var(--border);
+    padding:8px 16px;border-radius:20px;
+  }
+  .final .loop span.accent{
+    color:var(--accent);border-color:rgba(251,191,36,.3);
+    background:var(--accent-soft);
+  }
+
+  /* 滚动进度条 */
+  .progress{
+    position:fixed;top:0;left:0;height:2px;z-index:200;
+    background:var(--accent);width:0%;transition:width .1s linear;
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<nav class="topnav">
+  <div class="nav-inner">
+    <div class="nav-brand">作坊式开发</div>
+    <div class="nav-links">
+      <a href="#s0">00 动机</a>
+      <a href="#s1">01 验证</a>
+      <a href="#s2">02 边界</a>
+      <a href="#s3">03 原型</a>
+      <a href="#s4">04 MVP</a>
+      <a href="#s5">05 碰撞</a>
+      <a href="#s6">06 私测</a>
+      <a href="#s7">07 发布</a>
+      <a href="#s8">08 增长</a>
+      <a href="#s9">09 退出</a>
+      <a href="#gates">决策门</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="wrap">
+    <h1>作坊式开发的全生命周期<br><em>不是瀑布，是一连串不能塌的关键节点</em></h1>
+    <p>设计、开发、上线、推广——这些标志性阶段大家都知道，但决定生死的往往不是这些大词，而是夹在它们中间的那些细节。</p>
+    <p>细节做到位，四两拨千斤；没做到位，一路滑向死胡同。</p>
+    <div class="tag">独立开发者 · 单文件 HTML · 可离线保存</div>
+  </div>
+</header>
+
+<!-- ================= 引言 ================= -->
+<section class="intro">
+  <div class="wrap">
+    <h2>大家都知道的那四个阶段</h2>
+    <div class="stages-known">
+      <span>设计</span>
+      <span>开发</span>
+      <span>上线测试</span>
+      <span>推广及商业化</span>
+    </div>
+
+    <div class="intro-quote">
+      <p>这四个词本身没有错，但它们<strong>太粗了</strong>。</p>
+      <p style="margin-top:8px">真正决定项目生死的是夹在它们之间的关键节点：<strong>你封存了原始动机吗？你验证过问题吗？你写下了不做清单吗？你敢收费吗？你设了退出条件吗？</strong></p>
+      <p style="margin-top:8px">这些节点没做好，四个阶段做得再漂亮，也只是一条通往死胡同的路。</p>
+    </div>
+
+    <h2 style="margin-top:44px">真正要盯住的关键节点</h2>
+    <div class="stages-real">
+      <a href="#s0"><b>00</b> 封存原始动机</a>
+      <a href="#s1"><b>01</b> 问题验证</a>
+      <a href="#s2"><b>02</b> 赌注与边界</a>
+      <a href="#s3"><b>03</b> 手工 / 原型闭环</a>
+      <a href="#s4"><b>04</b> MVP</a>
+      <a href="#s5"><b>05</b> 朋友碰撞 / 种子反馈</a>
+      <a href="#s6"><b>06</b> 私测 / 预售</a>
+      <a href="#s7"><b>07</b> 公开发布</a>
+      <a href="#s8"><b>08</b> 增长 / 商业化</a>
+      <a href="#s9"><b>09</b> 维护 / 迭代 / 退出</a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 00 ================= -->
+<section class="stage" id="s0">
+  <div class="wrap">
+    <div class="stage-head">
+      <span class="stage-num">00</span>
+      <div>
+        <h3>封存原始动机</h3>
+        <p class="stage-sub">动手前把「为什么」钉死，之后不许偷偷改</p>
+      </div>
+    </div>
+
+    <div class="stage-key">
+      <span class="label">关键点</span>
+      <p>用一段话，原封不动写下：日期、你观察到的场景、谁在痛、现在怎么解决、你打算怎么做、成功信号、失败信号、你愿意投入多少、什么情况下你会放弃。写完封存，只在重大决策前回看。</p>
+    </div>
+
+    <div class="outcome-grid">
+      <div class="outcome good">
+        <h4>✓ 做到位 → 四两拨千斤</h4>
+        <ul>
+          <li>面对质疑时，你有一句话能钉住自己：我不是为了做产品，我是为了解决这个场景。</li>
+          <li>功能取舍有了锚点，不被用户、资本、朋友圈牵着走。</li>
+          <li>项目就算失败，你也清楚死在哪个假设上，而不是一笔糊涂账。</li>
+          <li>动机纯粹，做久了不会疲惫、不会迷茫。</li>
+        </ul>
+      </div>
+      <div class="outcome bad">
+        <h4>✕ 没做到 → 后果严重</h4>
+        <ul>
+          <li>动机被悄悄替换成「技术爽感」——为了开发而开发。</li>
+          <li>做了一堆功能，最初那个痛点早就丢了，最后自己也说不清为什么做它。</li>
+          <li>投资人说不性感就转型，用户说加个功能就加，产品变成大杂烩。</li>
+          <li>项目没有灵魂，做久了只剩疲惫。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="death"><span class="skull">☠</span> 典型死法：<b>为了开发而开发</b></div>
+
+    <div class="action">
+      <span class="label">动手</span>
+      <p>写 <code>why.md</code>，存档，只在重大决策前回看。不要每天看，会被自己感动。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 01 ================= -->
+<section class="stage" id="s1">
+  <div class="wrap">
+    <div class="stage-head">
+      <span class="stage-num">01</span>
+      <div>
+        <h3>问题验证</h3>
+        <p class="stage-sub">问过去行为，不问「你觉得怎么样」</p>
+      </div>
+    </div>
+
+    <div class="stage-key">
+      <span class="label">关键点</span>
+      <p>找 5–20 个目标用户，聊他们现在怎么解决这个问题，为此花过多少钱、多少时间。不要问「你会用吗」，要问「你上次遇到这个问题是什么时候，你当时做了什么」。</p>
+    </div>
+
+    <div class="outcome-grid">
+      <div class="outcome good">
+        <h4>✓ 做到位 → 四两拨千斤</h4>
+        <ul>
+          <li>你手里有一批真实用户愿意留邮箱、预约、甚至直接付费。</li>
+          <li>你知道用户现在的替代方案是什么，你的切入点在哪。</li>
+          <li>MVP 的每一步都有依据，开发时心里有底。</li>
+          <li>后面融资、推广、定价，你都有真实素材可以讲。</li>
+        </ul>
+      </div>
+      <div class="outcome bad">
+        <h4>✕ 没做到 → 后果严重</h4>
+        <ul>
+          <li>只问朋友「你会用吗」，收获 100 个「牛逼」，然后没人用。</li>
+          <li>做了一个没人疼的问题，自己感动自己。</li>
+          <li>开发到一半才发现方向错了，时间和热情一起烧光。</li>
+          <li>没有用户原话，后面所有决策只能靠猜。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="death"><span class="skull">☠</span> 典型死法：<b>自嗨</b></div>
+
+    <div class="action">
+      <span class="label">动手</span>
+      <p>做 5 个访谈，只记录原话，不记录评价。问「上次」「花了多少」「后来怎么解决的」。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 02 ================= -->
+<section class="stage" id="s2">
+  <div class="wrap">
+    <div class="stage-head">
+      <span class="stage-num">02</span>
+      <div>
+        <h3>赌注与边界</h3>
+        <p class="stage-sub">一页纸，最重要的是「不做清单」</p>
+      </div>
+    </div>
+
+    <div class="stage-key">
+      <span class="label">关键点</span>
+      <p>写一页纸：用户、痛点、承诺、核心功能、不做清单、成功标准、时间盒。不做清单比做清单更重要——它决定了你不会被什么带走。</p>
+    </div>
+
+    <div class="outcome-grid">
+      <div class="outcome good">
+        <h4>✓ 做到位 → 四两拨千斤</h4>
+        <ul>
+          <li>开发时不被「顺便也做」带偏。</li>
+          <li>新想法来了，有判断标准，不会被牵着走。</li>
+          <li>时间盒到点，能冷静判断：继续、缩小、转型、关停。</li>
+          <li>团队或合作者一看就懂，不用反复解释。</li>
+        </ul>
+      </div>
+      <div class="outcome bad">
+        <h4>✕ 没做到 → 后果严重</h4>
+        <ul>
+          <li>功能膨胀，永远做不完，永远差一点。</li>
+          <li>没有成功标准，做完了也不知道算不算成功。</li>
+          <li>「再打磨一下」变成无限期拖延。</li>
+          <li>别人问「你到底要做什么」，你答不上来。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="death"><span class="skull">☠</span> 典型死法：<b>功能膨胀 + 无限打磨</b></div>
+
+    <div class="action">
+      <span class="label">动手</span>
+      <p>写 <code>one-pager.md</code>，不超过一页。不做清单至少写 5 条。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 03 ================= -->
+<section class="stage" id="s3">
+  <div class="wrap">
+    <div class="stage-head">
+      <span class="stage-num">03</span>
+      <div>
+        <h3>手工 / 原型闭环</h3>
+        <p class="stage-sub">能手工先手工，能预售先预售</p>
+      </div>
+    </div>
+
+    <div class="stage-key">
+      <span class="label">关键点</span>
+      <p>用 Figma、Notion、表单 + 邮件、人工服务，先把核心流程跑通，让用户提前参与。不要一上来就写通用系统。</p>
+    </div>
+
+    <div class="outcome-grid">
+      <div class="outcome good">
+        <h4>✓ 做到位 → 四两拨千斤</h4>
+        <ul>
+          <li>几天就知道核心流程有没有价值，而不是几周。</li>
+          <li>用户提前成为共创者，反馈真实且及时。</li>
+          <li>试错成本极低，可以大胆改方向。</li>
+          <li>预售拿到的钱，直接变成开发动力。</li>
+        </ul>
+      </div>
+      <div class="outcome bad">
+        <h4>✕ 没做到 → 后果严重</h4>
+        <ul>
+          <li>一上来就写通用系统，三个月后才发现方向不对。</li>
+          <li>追求完美 UI，迟迟不给人用，热情在等待中耗尽。</li>
+          <li>用户第一次看到的是半成品，反馈全是表面问题，听不到真需求。</li>
+          <li>代码写了一大堆，没人用过，全是沉没成本。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="death"><span class="skull">☠</span> 典型死法：<b>技术先行，用户缺席</b></div>
+
+    <div class="action">
+      <span class="label">动手</span>
+      <p>用最低成本的方式跑通一次核心流程，哪怕全是人工。目标是「让人用上」，不是「让人看到代码」。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 04 ================= -->
+<section class="stage" id="s4">
+  <div class="wrap">
+    <div class="stage-head">
+      <span class="stage-num">04</span>
+      <div>
+        <h3>MVP</h3>
+        <p class="stage-sub">只做一个端到端闭环，其他全砍</p>
+      </div>
+    </div>
+
+    <div class="stage-key">
+      <span class="label">关键点</span>
+      <p>输入 → 核心动作 → 输出 → 反馈 / 付费。一个闭环跑通，比十个半成品功能有价值。陌生人能独立完成核心任务，才算过关。</p>
+    </div>
+
+    <div class="outcome-grid">
+      <div class="outcome good">
+        <h4>✓ 做到位 → 四两拨千斤</h4>
+        <ul>
+          <li>陌生人能独立完成核心任务，不用你在旁边解释。</li>
+          <li>有明确的东西可以给别人看、给别人用。</li>
+          <li>为下一步的反馈和收费打好基础。</li>
+          <li>你能清楚说出「这个产品解决了什么」，一句话。</li>
+        </ul>
+      </div>
+      <div class="outcome bad">
+        <h4>✕ 没做到 → 后果严重</h4>
+        <ul>
+          <li>加了一堆「顺便也做」，核心闭环没跑通。</li>
+          <li>用户拿到手不知道怎么用，你还得在旁边解释。</li>
+          <li>自己觉得很好，但没人能独立用起来。</li>
+          <li>功能很多，但没有一个能收费。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="death"><span class="skull">☠</span> 典型死法：<b>功能堆砌，闭环缺失</b></div>
+
+    <div class="action">
+      <span class="label">动手</span>
+      <p>画一条线：输入 → 核心动作 → 输出 → 反馈/付费。问自己「这条线能自己跑完吗」。不能，就砍功能。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 05 ================= -->
+<section class="stage" id="s5">
+  <div class="wrap">
+    <div class="stage-head">
+      <span class="stage-num">05</span>
+      <div>
+        <h3>朋友碰撞 / 种子反馈</h3>
+        <p class="stage-sub">朋友给情绪和盲点，用户给行为和钱</p>
+      </div>
+    </div>
+
+    <div class="stage-key">
+      <span class="label">关键点</span>
+      <p>分三类人：目标用户、同行、潜在付费者。记录原话，不记录评价。问「你会怎么用 / 为什么不用」，不问「你觉得怎么样」。</p>
+    </div>
+
+    <div class="outcome-grid">
+      <div class="outcome good">
+        <h4>✓ 做到位 → 四两拨千斤</h4>
+        <ul>
+          <li>拿到真实盲点和第一批种子用户。</li>
+          <li>创作欲被激发，但情绪和需求分得清。</li>
+          <li>假设变成可以验证的实验，而不是空想。</li>
+          <li>朋友成为传播节点，而不是只会说「牛逼」的啦啦队。</li>
+        </ul>
+      </div>
+      <div class="outcome bad">
+        <h4>✕ 没做到 → 后果严重</h4>
+        <ul>
+          <li>把「朋友说好」当成市场验证，继续闷头开发。</li>
+          <li>被「你应该加个 XX 功能」牵着走，产品变成大杂烩。</li>
+          <li>情绪被打击或捧上天，失去判断。</li>
+          <li>朋友碍于情面不说真话，你活在幻觉里。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="death"><span class="skull">☠</span> 典型死法：<b>把鼓励当需求</b></div>
+
+    <div class="action">
+      <span class="label">动手</span>
+      <p>建 <code>feedback.md</code>，只记原话。朋友说「挺好的」，追问「你会用它替代现在的什么工具」。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 06 ================= -->
+<section class="stage" id="s6">
+  <div class="wrap">
+    <div class="stage-head">
+      <span class="stage-num">06</span>
+      <div>
+        <h3>私测 / 预售</h3>
+        <p class="stage-sub">免费测听不到真话</p>
+      </div>
+    </div>
+
+    <div class="stage-key">
+      <span class="label">关键点</span>
+      <p>拉 10–50 个真实用户，收费，观察留存。愿意付费比愿意点赞重要一百倍。定价可以低，但必须收。</p>
+    </div>
+
+    <div class="outcome-grid">
+      <div class="outcome good">
+        <h4>✓ 做到位 → 四两拨千斤</h4>
+        <ul>
+          <li>有付费用户，有人续费、有人推荐。</li>
+          <li>有留存数据，知道谁在用、为什么用、什么时候不用。</li>
+          <li>有真实的现金流信号，能判断这条路能不能走。</li>
+          <li>面对质疑时，你能说「已经有人付钱了」。</li>
+        </ul>
+      </div>
+      <div class="outcome bad">
+        <h4>✕ 没做到 → 后果严重</h4>
+        <ul>
+          <li>免费给一堆人用，收到一堆「挺好用」，然后没人回来。</li>
+          <li>靠朋友撑场面，数据好看但不可持续。</li>
+          <li>不知道用户为什么来、为什么走，只能靠猜。</li>
+          <li>上线后才想定价，手忙脚乱，得罪早期用户。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="death"><span class="skull">☠</span> 典型死法：<b>免费测试 + 虚假繁荣</b></div>
+
+    <div class="action">
+      <span class="label">动手</span>
+      <p>设一个价格，找 10 个人收钱。哪怕只收 1 块钱，也比免费强。记录谁付了、为什么付。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 07 ================= -->
+<section class="stage" id="s7">
+  <div class="wrap">
+    <div class="stage-head">
+      <span class="stage-num">07</span>
+      <div>
+        <h3>公开发布</h3>
+        <p class="stage-sub">发布是一次活动，推广是长期并行</p>
+      </div>
+    </div>
+
+    <div class="stage-key">
+      <span class="label">关键点</span>
+      <p>软发布 → 修致命问题 → 再公开推。部署、支付、邮件、分析、客服、备份、隐私政策，一个都不能少。</p>
+    </div>
+
+    <div class="outcome-grid">
+      <div class="outcome good">
+        <h4>✓ 做到位 → 四两拨千斤</h4>
+        <ul>
+          <li>有非朋友来源的用户，说明渠道真的通了。</li>
+          <li>支付、支持、数据链路全通，能持续迭代。</li>
+          <li>发布只是开始，不是终点，节奏在你自己手里。</li>
+          <li>有分析数据，知道用户从哪来、在哪掉。</li>
+        </ul>
+      </div>
+      <div class="outcome bad">
+        <h4>✕ 没做到 → 后果严重</h4>
+        <ul>
+          <li>大爆炸发布，等完美，结果错过窗口。</li>
+          <li>发布后才发现支付没通、客服没人管、数据没埋点。</li>
+          <li>用户来了一波，基础体验有洞，留不住。</li>
+          <li>发布当天很热闹，第二天归零。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="death"><span class="skull">☠</span> 典型死法：<b>一次性发布，无人接住</b></div>
+
+    <div class="action">
+      <span class="label">动手</span>
+      <p>做发布清单，逐项打勾：域名、支付、邮件、分析、客服、备份、隐私政策、帮助文档、更新日志。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 08 ================= -->
+<section class="stage" id="s8">
+  <div class="wrap">
+    <div class="stage-head">
+      <span class="stage-num">08</span>
+      <div>
+        <h3>增长 / 商业化</h3>
+        <p class="stage-sub">推广从第一天开始，不是发布后才想</p>
+      </div>
+    </div>
+
+    <div class="stage-key">
+      <span class="label">关键点</span>
+      <p>内容、社区、SEO、合作、广告；定价实验。找到可重复的获客渠道，比一次性热点重要。每周固定时间做推广，记录每个渠道的转化。</p>
+    </div>
+
+    <div class="outcome-grid">
+      <div class="outcome good">
+        <h4>✓ 做到位 → 四两拨千斤</h4>
+        <ul>
+          <li>找到可重复的获客渠道，不再靠运气。</li>
+          <li>有正现金流或可预期的现金流。</li>
+          <li>不被单一渠道绑架，抗风险能力强。</li>
+          <li>定价有实验、有依据，不是拍脑袋。</li>
+        </ul>
+      </div>
+      <div class="outcome bad">
+        <h4>✕ 没做到 → 后果严重</h4>
+        <ul>
+          <li>最后才想钱，定价靠猜。</li>
+          <li>获客靠朋友和一次性热点，不可持续。</li>
+          <li>免费用户一大堆，转化率极低，不知道怎么改。</li>
+          <li>收入归零那天，才发现没有第二条路。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="death"><span class="skull">☠</span> 典型死法：<b>最后才想钱</b></div>
+
+    <div class="action">
+      <span class="label">动手</span>
+      <p>每周固定 2 小时做推广，记录每个渠道的转化。公开构建，把过程发出去。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 09 ================= -->
+<section class="stage" id="s9">
+  <div class="wrap">
+    <div class="stage-head">
+      <span class="stage-num">09</span>
+      <div>
+        <h3>维护 / 迭代 / 退出</h3>
+        <p class="stage-sub">设好退出条件，不要舍不得</p>
+      </div>
+    </div>
+
+    <div class="stage-key">
+      <span class="label">关键点</span>
+      <p>加码、转型、维持、关停。每季度回看动机和成功标准，做明确决策。关停不是失败，是把精力释放给下一个机会。</p>
+    </div>
+
+    <div class="outcome-grid">
+      <div class="outcome good">
+        <h4>✓ 做到位 → 四两拨千斤</h4>
+        <ul>
+          <li>及时止损，把精力放到下一个。</li>
+          <li>持续迭代的项目有节奏，不疲劳。</li>
+          <li>关停也是成功，因为你知道了什么不行。</li>
+          <li>你手里的经验，变成下一个项目的起点。</li>
+        </ul>
+      </div>
+      <div class="outcome bad">
+        <h4>✕ 没做到 → 后果严重</h4>
+        <ul>
+          <li>舍不得关停，耗死自己。</li>
+          <li>无限期维护，没有新鲜感，也没有增长。</li>
+          <li>把「坚持」当美德，其实是路径依赖。</li>
+          <li>机会成本巨大，错过下一个真正值得做的事。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="death"><span class="skull">☠</span> 典型死法：<b>耗死</b></div>
+
+    <div class="action">
+      <span class="label">动手</span>
+      <p>每季度一次复盘，写下继续或关停的理由。回看 <code>why.md</code> 和 <code>one-pager.md</code>。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 决策门 ================= -->
+<section class="gates" id="gates">
+  <div class="wrap">
+    <h2>每个节点，设一道决策门</h2>
+    <p class="desc">不通过，不往下走。独立开发者最缺的不是更多步骤，而是「不通过就不走」的纪律。</p>
+
+    <table class="gate-table">
+      <thead>
+        <tr>
+          <th>节点</th>
+          <th>通过条件</th>
+          <th>不通过怎么办</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>00 封存动机</td>
+          <td>能一句话说清为谁解决什么</td>
+          <td><em>不写代码，先想清楚</em></td>
+        </tr>
+        <tr>
+          <td>01 问题验证</td>
+          <td>有人现在为这个问题花时间 / 钱</td>
+          <td><em>缩小或换方向</em></td>
+        </tr>
+        <tr>
+          <td>02 赌注与边界</td>
+          <td>一页纸写清，且知道不做什么</td>
+          <td><em>砍功能，重新写</em></td>
+        </tr>
+        <tr>
+          <td>03 手工 / 原型</td>
+          <td>用户觉得核心流程有价值</td>
+          <td><em>回到 01 重新验证</em></td>
+        </tr>
+        <tr>
+          <td>04 MVP</td>
+          <td>陌生人能独立完成核心任务</td>
+          <td><em>修闭环，不加功能</em></td>
+        </tr>
+        <tr>
+          <td>05 朋友碰撞</td>
+          <td>拿到盲点和种子用户</td>
+          <td><em>换人聊，别只问朋友</em></td>
+        </tr>
+        <tr>
+          <td>06 私测 / 预售</td>
+          <td>有人付费、续费、推荐</td>
+          <td><em>调整定位或价格</em></td>
+        </tr>
+        <tr>
+          <td>07 公开发布</td>
+          <td>有非朋友来源的用户</td>
+          <td><em>检查渠道和落地</em></td>
+        </tr>
+        <tr>
+          <td>08 增长 / 商业化</td>
+          <td>获客可重复，现金流可预期</td>
+          <td><em>不加功能，改模式</em></td>
+        </tr>
+        <tr>
+          <td>09 维护 / 退出</td>
+          <td>明确继续投入或及时止损</td>
+          <td><em>关停，释放精力</em></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= 结尾 ================= -->
+<section class="final">
+  <div class="wrap">
+    <h2>不是瀑布，是<em>一圈一圈的循环</em></h2>
+    <p>作坊式开发的全生命周期，不是一条直线，而是一个循环。每个节点都可能回到上一个节点，也可能直接关停。</p>
+    <p>你不需要一次做对所有事，你只需要在关键节点上，不骗自己。</p>
+
+    <div class="loop">
+      <span class="accent">记录</span>
+      <span>→</span>
+      <span class="accent">验证</span>
+      <span>→</span>
+      <span class="accent">做</span>
+      <span>→</span>
+      <span class="accent">分享</span>
+      <span>→</span>
+      <span class="accent">收钱</span>
+      <span>→</span>
+      <span class="accent">放大 / 关停</span>
+    </div>
+
+    <p style="margin-top:40px;font-size:13px;color:#5b656f">独立开发者 · 作坊式开发 · 关键节点手册</p>
+  </div>
+</section>
+
+<script>
+  // 滚动进度条
+  const progress = document.getElementById('progress');
+  window.addEventListener('scroll', () => {
+    const h = document.documentElement.scrollHeight - window.innerHeight;
+    const p = h > 0 ? (window.scrollY / h) * 100 : 0;
+    progress.style.width = p + '%';
+  }, {passive:true});
+
+  // 导航高亮
+  const links = document.querySelectorAll('.nav-links a');
+  const sections = [...links].map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = '#' + entry.target.id;
+        links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === id));
+      }
+    });
+  }, {rootMargin: '-20% 0px -70% 0px'});
+
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
